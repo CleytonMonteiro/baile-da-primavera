@@ -368,7 +368,7 @@
             }
 
             salvarBtn.addEventListener('click', () => {
-                if (senhaSupervisorInput.value === senhaCorreta) {
+                if (senhaSupervisorInput.value.trim() === senhaCorreta) {
                     const numeroMesa = parseInt(mesaNumeroInput.value);
                     const novoNome = nomeCompletoInput.value;
                     const novoStatus = statusMesaSelect.value;
@@ -378,7 +378,8 @@
                         status: novoStatus
                     };
                     
-                    set(child(mesasRef, numeroMesa), updateData)
+                    // AQUI ESTÁ A CORREÇÃO: numeroMesa.toString()
+                    set(child(mesasRef, numeroMesa.toString()), updateData)
                         .then(() => {
                             console.log("Mesa atualizada no Firebase com sucesso!");
                             cadastroForm.style.display = 'none';
@@ -403,7 +404,6 @@
                 if (mesasData) {
                     renderizarMesas(mesasData);
                 } else {
-                    // Inicializa o banco de dados se ele estiver vazio
                     console.log("Banco de dados vazio. Inicializando mesas...");
                     const mesasIniciais = {};
                     for (const colId in layoutMesas) {
