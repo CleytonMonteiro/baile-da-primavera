@@ -50,6 +50,15 @@
             margin-top: 20px;
         }
         
+        /* CORREÇÃO PARA O CELULAR */
+        @media (max-width: 768px) {
+            .layout-salão {
+                justify-content: flex-start;
+                overflow-x: auto;
+                gap: 20px; /* Ajuste o espaçamento para telas menores */
+            }
+        }
+
         .secao-mesas {
             display: flex;
             gap: 10px;
@@ -86,6 +95,7 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             background-color: #f9f9f9;
             position: relative;
+            flex-shrink: 0; /* Impede que as mesas diminuam */
         }
         
         .mesa:hover {
