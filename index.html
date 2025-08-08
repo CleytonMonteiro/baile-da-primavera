@@ -308,7 +308,7 @@
             const salvarBtn = document.getElementById('salvar-btn');
             const cancelarBtn = document.getElementById('cancelar-btn');
             const mensagemErro = document.getElementById('mensagem-erro');
-            const senhaCorreta = "12345";
+            const senhaCorreta = "100945";
 
             const layoutMesas = {
                 'col-esq-1': [101, 100, 99, 98, 97, 96, 95, 94],
@@ -378,7 +378,6 @@
                         status: novoStatus
                     };
                     
-                    // AQUI ESTÁ A CORREÇÃO: numeroMesa.toString()
                     set(child(mesasRef, numeroMesa.toString()), updateData)
                         .then(() => {
                             console.log("Mesa atualizada no Firebase com sucesso!");
