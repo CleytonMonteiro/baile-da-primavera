@@ -279,12 +279,10 @@
     </div>
 
     <script type="module">
-        // Importa as funções do Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
         import { getDatabase, ref, onValue, set, child } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-analytics.js";
 
-        // Configuração do Firebase (copiada do seu código)
         const firebaseConfig = {
             apiKey: "AIzaSyDGVgqwdSOJJn0plwfKkHEsofxvfHFCf6w",
             authDomain: "layoutsalaodefesta.firebaseapp.com",
@@ -296,7 +294,6 @@
             measurementId: "G-L21G98V5CL"
         };
 
-        // Inicializa o Firebase
         const app = initializeApp(firebaseConfig);
         const analytics = getAnalytics(app);
         const database = getDatabase(app);
@@ -405,6 +402,18 @@
                 const mesasData = snapshot.val();
                 if (mesasData) {
                     renderizarMesas(mesasData);
+                } else {
+                    // Inicializa o banco de dados se ele estiver vazio
+                    console.log("Banco de dados vazio. Inicializando mesas...");
+                    const mesasIniciais = {};
+                    for (const colId in layoutMesas) {
+                        layoutMesas[colId].forEach(mesaNum => {
+                            mesasIniciais[mesaNum] = { status: 'livre', nome: '' };
+                        });
+                    }
+                    set(mesasRef, mesasIniciais)
+                        .then(() => console.log("Dados iniciais das mesas salvos no Firebase."))
+                        .catch(error => console.error("Erro ao salvar dados iniciais:", error));
                 }
             });
         });
