@@ -42,22 +42,28 @@
         }
 
         .layout-salão {
+            /* Alterado para que não interfira na rolagem interna */
+            width: 100%;
+            max-width: 1400px;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        /* NOVO CONTÊINER DE ROLAGEM para celular */
+        .scroll-container {
             display: flex;
             justify-content: center;
             gap: 50px;
             width: 100%;
-            max-width: 1400px;
-            margin-top: 20px;
         }
-        
-        /* CORREÇÃO MAIS ROBUSTA PARA O CELULAR */
+
         @media (max-width: 768px) {
-            .layout-salão {
+            .scroll-container {
                 justify-content: flex-start;
                 overflow-x: auto;
                 gap: 20px;
-                /* Adiciona rolagem horizontal para o conteúdo que transborda */
-                width: 100%;
             }
             .secao-mesas {
                 flex-shrink: 0; /* Impede que as seções de mesa diminuam */
@@ -242,30 +248,32 @@
 
     <div class="layout-salão">
         
-        <div class="secao-mesas" id="secao-esquerda">
-            <div class="coluna-mesas" id="col-esq-1"></div>
-            <div class="coluna-mesas" id="col-esq-2"></div>
-            <div class="coluna-mesas" id="col-esq-3"></div>
-            <div class="coluna-mesas" id="col-esq-4"></div>
-        </div>
+        <div class="scroll-container">
+            <div class="secao-mesas" id="secao-esquerda">
+                <div class="coluna-mesas" id="col-esq-1"></div>
+                <div class="coluna-mesas" id="col-esq-2"></div>
+                <div class="coluna-mesas" id="col-esq-3"></div>
+                <div class="coluna-mesas" id="col-esq-4"></div>
+            </div>
 
-        <div class="secao-centro" id="secao-centro">
-            <div class="coluna-mesas" id="col-cen-1"></div>
-            <div class="coluna-mesas" id="col-cen-2"></div>
-            <div class="coluna-mesas" id="col-cen-3"></div>
-            <div class="coluna-mesas" id="col-cen-4"></div>
-            <div class="coluna-mesas" id="col-cen-5"></div>
-            <div class="coluna-mesas" id="col-cen-6"></div>
-	        <div class="coluna-mesas" id="col-cen-7"></div>
-        </div>
-        
-        <div class="secao-mesas" id="secao-direita">
-            <div class="coluna-mesas" id="col-dir-1"></div>
-            <div class="coluna-mesas" id="col-dir-2"></div>
-            <div class="coluna-mesas" id="col-dir-3"></div>
-            <div class="coluna-mesas" id="col-dir-4"></div>
-            <div class="coluna-mesas" id="col-dir-5"></div>
-            <div class="coluna-mesas" id="col-dir-6"></div>
+            <div class="secao-centro" id="secao-centro">
+                <div class="coluna-mesas" id="col-cen-1"></div>
+                <div class="coluna-mesas" id="col-cen-2"></div>
+                <div class="coluna-mesas" id="col-cen-3"></div>
+                <div class="coluna-mesas" id="col-cen-4"></div>
+                <div class="coluna-mesas" id="col-cen-5"></div>
+                <div class="coluna-mesas" id="col-cen-6"></div>
+                <div class="coluna-mesas" id="col-cen-7"></div>
+            </div>
+            
+            <div class="secao-mesas" id="secao-direita">
+                <div class="coluna-mesas" id="col-dir-1"></div>
+                <div class="coluna-mesas" id="col-dir-2"></div>
+                <div class="coluna-mesas" id="col-dir-3"></div>
+                <div class="coluna-mesas" id="col-dir-4"></div>
+                <div class="coluna-mesas" id="col-dir-5"></div>
+                <div class="coluna-mesas" id="col-dir-6"></div>
+            </div>
         </div>
     </div>
 
@@ -273,7 +281,7 @@
         <h2>Cadastro de Mesa</h2>
         <input type="hidden" id="mesa-numero">
         
-        <label for="nome-completo">Nome Completo:</label>
+        <label for="nome-completo">Nome Completa:</label>
         <input type="text" id="nome-completo" placeholder="Digite o nome completo" required>
         
         <label for="status-mesa">Status:</label>
