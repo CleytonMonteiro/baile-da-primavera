@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AABB ARACAJU - 80 ANOS</title>
+    
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -84,20 +85,19 @@
             transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             background-color: #f9f9f9;
-            position: relative; /* Necessário para posicionar o tooltip */
+            position: relative;
         }
         
         .mesa:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-            z-index: 1000; /* Adicionado para trazer a mesa e o tooltip para a frente */
+            z-index: 1000;
         }
 
-        /* Estilo do tooltip */
         .mesa[data-tooltip]:hover::before {
             content: attr(data-tooltip);
             position: absolute;
-            bottom: 100%; /* Posiciona acima da mesa */
+            bottom: 100%;
             left: 50%;
             transform: translateX(-50%);
             background-color: #333;
@@ -278,7 +278,30 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        // Importa as funções do Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+        import { getDatabase, ref, onValue, set, child } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-analytics.js";
+
+        // Configuração do Firebase (copiada do seu código)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDGVgqwdSOJJn0plwfKkHEsofxvfHFCf6w",
+            authDomain: "layoutsalaodefesta.firebaseapp.com",
+            databaseURL: "https://layoutsalaodefesta-default-rtdb.firebaseio.com",
+            projectId: "layoutsalaodefesta",
+            storageBucket: "layoutsalaodefesta.firebasestorage.app",
+            messagingSenderId: "1060371531536",
+            appId: "1:1060371531536:web:fbed496ff9a78982580795",
+            measurementId: "G-L21G98V5CL"
+        };
+
+        // Inicializa o Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const database = getDatabase(app);
+        const mesasRef = ref(database, 'mesas');
+
         document.addEventListener('DOMContentLoaded', () => {
             const cadastroForm = document.getElementById('cadastro-form');
             const mesaNumeroInput = document.getElementById('mesa-numero');
@@ -288,16 +311,13 @@
             const salvarBtn = document.getElementById('salvar-btn');
             const cancelarBtn = document.getElementById('cancelar-btn');
             const mensagemErro = document.getElementById('mensagem-erro');
-            const senhaCorreta = "100945";
-            const localStorageKey = "estadoMesas";
+            const senhaCorreta = "12345";
 
-            // Dados brutos das mesas para reproduzir o layout da imagem
             const layoutMesas = {
                 'col-esq-1': [101, 100, 99, 98, 97, 96, 95, 94],
                 'col-esq-2': [86, 87, 88, 89, 90, 91, 92, 93],
                 'col-esq-3': [85, 84, 83, 82, 81, 80, 79, 78], 
                 'col-esq-4': [70, 71, 72, 73, 74, 75, 76, 77],
-                
                 'col-cen-1': [69, 68, 67],
                 'col-cen-2': [64, 65, 66],
                 'col-cen-3': [63, 62, 61],
@@ -305,7 +325,6 @@
                 'col-cen-5': [57, 56, 55],
                 'col-cen-6': [52, 53, 54],
                 'col-cen-7': [51, 50, 49],
-
                 'col-dir-1': [41, 42, 43, 44, 45, 46, 47, 48],
                 'col-dir-2': [40, 39, 38, 37, 36, 35, 34, 33],
                 'col-dir-3': [25, 26, 27, 28, 29, 30, 31, 32],
@@ -314,42 +333,18 @@
                 'col-dir-6': [8, 7, 6, 5, 4, 3, 2, 1]
             };
             
-            let mesas = {};
-
-            // Função para salvar o estado das mesas no localStorage
-            function salvarEstadoMesas() {
-                localStorage.setItem(localStorageKey, JSON.stringify(mesas));
-            }
-
-            // Função para carregar o estado das mesas do localStorage
-            function carregarEstadoMesas() {
-                const dadosSalvos = localStorage.getItem(localStorageKey);
-                if (dadosSalvos) {
-                    mesas = JSON.parse(dadosSalvos);
-                } else {
-                    // Se não houver dados salvos, inicializa as mesas com status padrão (livre)
-                    for (const colId in layoutMesas) {
-                        layoutMesas[colId].forEach(mesaNum => {
-                            mesas[mesaNum] = { status: 'livre', nome: '' };
-                        });
-                    }
-                }
-            }
-
-            // Função para renderizar as mesas na tela
-            function renderizarMesas() {
+            function renderizarMesas(mesasData) {
                 document.querySelectorAll('.coluna-mesas').forEach(col => col.innerHTML = '');
                 
                 for (const colId in layoutMesas) {
                     const coluna = document.getElementById(colId);
                     layoutMesas[colId].forEach(mesaNum => {
                         const mesaDiv = document.createElement('div');
-                        const mesaData = mesas[mesaNum];
+                        const mesaData = mesasData[mesaNum] || { status: 'livre', nome: '' };
                         mesaDiv.classList.add('mesa', mesaData.status);
                         mesaDiv.textContent = mesaNum.toString().padStart(2, '0');
                         mesaDiv.dataset.numero = mesaNum;
                         
-                        // Adiciona o atributo data-tooltip se a mesa estiver reservada ou vendida
                         if (mesaData.status !== 'livre' && mesaData.nome) {
                             mesaDiv.setAttribute('data-tooltip', `Responsável: ${mesaData.nome}`);
                         } else {
@@ -357,7 +352,7 @@
                         }
 
                         mesaDiv.addEventListener('click', () => {
-                            abrirFormulario(mesaNum);
+                            abrirFormulario(mesaNum, mesaData);
                         });
                         
                         coluna.appendChild(mesaDiv);
@@ -365,11 +360,10 @@
                 }
             }
 
-            function abrirFormulario(numero) {
-                const mesa = mesas[numero];
+            function abrirFormulario(numero, mesaData) {
                 mesaNumeroInput.value = numero;
-                nomeCompletoInput.value = mesa.nome;
-                statusMesaSelect.value = mesa.status;
+                nomeCompletoInput.value = mesaData.nome;
+                statusMesaSelect.value = mesaData.status;
                 senhaSupervisorInput.value = '';
                 mensagemErro.style.display = 'none';
                 cadastroForm.classList.remove('alerta-erro');
@@ -382,13 +376,21 @@
                     const novoNome = nomeCompletoInput.value;
                     const novoStatus = statusMesaSelect.value;
                     
-                    mesas[numeroMesa].nome = novoNome;
-                    mesas[numeroMesa].status = novoStatus;
+                    const updateData = {
+                        nome: novoNome,
+                        status: novoStatus
+                    };
                     
-                    salvarEstadoMesas(); // Salva o estado atualizado no localStorage
-                    
-                    cadastroForm.style.display = 'none';
-                    renderizarMesas();
+                    set(child(mesasRef, numeroMesa), updateData)
+                        .then(() => {
+                            console.log("Mesa atualizada no Firebase com sucesso!");
+                            cadastroForm.style.display = 'none';
+                        })
+                        .catch(error => {
+                            console.error("Erro ao atualizar mesa no Firebase:", error);
+                            alert("Erro ao salvar. Verifique a conexão com o Firebase.");
+                        });
+
                 } else {
                     mensagemErro.style.display = 'block';
                     cadastroForm.classList.add('alerta-erro');
@@ -398,10 +400,13 @@
             cancelarBtn.addEventListener('click', () => {
                 cadastroForm.style.display = 'none';
             });
-
-            // Carrega o estado das mesas ao iniciar a página e depois renderiza
-            carregarEstadoMesas();
-            renderizarMesas();
+            
+            onValue(mesasRef, (snapshot) => {
+                const mesasData = snapshot.val();
+                if (mesasData) {
+                    renderizarMesas(mesasData);
+                }
+            });
         });
     </script>
 </body>
