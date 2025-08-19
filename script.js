@@ -14,25 +14,8 @@ const firebaseConfig = {
     measurementId: "G-L21G98V5CL"
 };
 
-const layoutMesas = {
-    'col-esq-1': [101, 100, 99, 98, 97, 96, 95, 94],
-    'col-esq-2': [86, 87, 88, 89, 90, 91, 92, 93],
-    'col-esq-3': [85, 84, 83, 82, 81, 80, 79, 78], 
-    'col-esq-4': [70, 71, 72, 73, 74, 75, 76, 77],
-    'col-cen-1': [69, 68, 67],
-    'col-cen-2': [64, 65, 66],
-    'col-cen-3': [63, 62, 61],
-    'col-cen-4': [58, 59, 60],
-    'col-cen-5': [57, 56, 55],
-    'col-cen-6': [52, 53, 54],
-    'col-cen-7': [51, 50, 49],
-    'col-dir-1': [41, 42, 43, 44, 45, 46, 47, 48],
-    'col-dir-2': [40, 39, 38, 37, 36, 35, 34, 33],
-    'col-dir-3': [25, 26, 27, 28, 29, 30, 31, 32],
-    'col-dir-4': [24, 23, 22, 21, 20, 19, 18, 17],
-    'col-dir-5': [9, 10, 11, 12, 13, 14, 15, 16],
-    'col-dir-6': [8, 7, 6, 5, 4, 3, 2, 1]
-};
+// REMOVIDO: O objeto layoutMesas agora será carregado do Firebase.
+let layoutMesasGlobal = {};
 
 let isLoggedIn = false;
 let mesasDataGlobal = {};
@@ -56,11 +39,15 @@ const nomeErroSpan = document.getElementById('nome-erro');
 const scrollContainer = document.getElementById('scroll-container');
 const searchInput = document.getElementById('search-input');
 const searchCountSpan = document.getElementById('search-count');
+const menuBtn = document.getElementById('menu-btn');
+const closeMenuBtn = document.getElementById('close-menu-btn');
+const sideMenu = document.getElementById('side-menu');
 
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const database = getDatabase(app);
 const mesasRef = ref(database, 'mesas');
+const layoutRef = ref(database, 'layoutMesas'); // NOVO: Referência para o layout no Firebase
 const auth = getAuth(app);
 
 function renderizarMesas(mesasData) {
@@ -68,9 +55,11 @@ function renderizarMesas(mesasData) {
     
     let mesasEncontradas = 0;
 
-    for (const colId in layoutMesas) {
+    for (const colId in layoutMesasGlobal) {
         const coluna = document.getElementById(colId);
-        layoutMesas[colId].forEach(mesaNum => {
+        if (!coluna) continue; // Garante que a coluna existe no HTML
+        
+        layoutMesasGlobal[colId].forEach(mesaNum => {
             const mesaData = mesasData[mesaNum] || { status: 'livre', nome: '' };
 
             const termoBusca = searchInput.value.toUpperCase().trim();
@@ -98,19 +87,20 @@ function renderizarMesas(mesasData) {
     searchCountSpan.textContent = `Mesas encontradas: ${mesasEncontradas}`;
 }
 
+// ... (O resto do código permanece o mesmo)
+
 function abrirFormulario(numero, mesaData) {
+    sideMenu.classList.remove('open'); 
     mesaNumeroInput.value = numero;
     nomeCompletoInput.value = mesaData.nome;
     statusMesaSelect.value = mesaData.status;
     nomeCompletoInput.classList.remove('input-erro');
     nomeErroSpan.style.display = 'none';
-    
     if (mesaData.status === 'livre') {
         liberarBtn.style.display = 'none';
     } else {
         liberarBtn.style.display = 'inline-block';
     }
-
     cadastroForm.style.display = 'flex';
 }
 
@@ -121,14 +111,8 @@ function fecharFormulario() {
 function salvarMesa(status, nome) {
     salvarBtn.textContent = 'Salvando...';
     salvarBtn.disabled = true;
-
     const numeroMesa = parseInt(mesaNumeroInput.value);
-    
-    const updateData = {
-        nome: nome,
-        status: status
-    };
-    
+    const updateData = { nome: nome, status: status };
     set(child(mesasRef, numeroMesa.toString()), updateData)
         .then(() => {
             console.log("Mesa atualizada no Firebase com sucesso!");
@@ -197,18 +181,16 @@ function setupEventListeners() {
 
     cancelarBtn.addEventListener('click', fecharFormulario);
     nomeCompletoInput.addEventListener('input', (e) => e.target.value = e.target.value.toUpperCase());
-    
     liberarBtn.addEventListener('click', liberarMesa);
-
     loginBtn.addEventListener('click', handleLogin);
     logoutBtn.addEventListener('click', handleLogout);
-
     searchInput.addEventListener('input', () => renderizarMesas(mesasDataGlobal));
+    menuBtn.addEventListener('click', () => sideMenu.classList.add('open'));
+    closeMenuBtn.addEventListener('click', () => sideMenu.classList.remove('open'));
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
-    
     onAuthStateChanged(auth, (user) => {
         if (user) {
             isLoggedIn = true;
@@ -221,21 +203,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    onValue(mesasRef, (snapshot) => {
-        mesasDataGlobal = snapshot.val();
-        if (mesasDataGlobal) {
-            renderizarMesas(mesasDataGlobal);
+    // NOVO: Carrega o layout do Firebase
+    onValue(layoutRef, (snapshot) => {
+        const layoutData = snapshot.val();
+        if (layoutData) {
+            layoutMesasGlobal = layoutData;
+            onValue(mesasRef, (mesasSnapshot) => {
+                mesasDataGlobal = mesasSnapshot.val();
+                if (mesasDataGlobal) {
+                    renderizarMesas(mesasDataGlobal);
+                } else {
+                    console.log("Banco de dados de mesas vazio. Inicializando...");
+                    const mesasIniciais = {};
+                    for (const colId in layoutMesasGlobal) {
+                        layoutMesasGlobal[colId].forEach(mesaNum => {
+                            mesasIniciais[mesaNum] = { status: 'livre', nome: '' };
+                        });
+                    }
+                    set(mesasRef, mesasIniciais);
+                }
+            });
         } else {
-            console.log("Banco de dados vazio. Inicializando mesas...");
-            const mesasIniciais = {};
-            for (const colId in layoutMesas) {
-                layoutMesas[colId].forEach(mesaNum => {
-                    mesasIniciais[mesaNum] = { status: 'livre', nome: '' };
-                });
-            }
-            set(mesasRef, mesasIniciais)
-                .then(() => console.log("Dados iniciais das mesas salvos no Firebase."))
-                .catch(error => console.error("Erro ao salvar dados iniciais:", error));
+            console.warn("Nenhum layout encontrado no Firebase. Por favor, configure-o no Painel de Admin.");
+            // Mostra uma mensagem de aviso na tela se não houver layout
+            document.querySelector('.layout-salão').innerHTML = '<h2>Nenhum layout encontrado. Por favor, acesse o <a href="admin.html">Painel de Admin</a> para configurar o layout inicial.</h2>';
         }
     });
 });
