@@ -55,7 +55,7 @@ const logoutBtn = document.getElementById('logout-btn');
 const nomeErroSpan = document.getElementById('nome-erro');
 const scrollContainer = document.getElementById('scroll-container');
 const searchInput = document.getElementById('search-input');
-const searchCountSpan = document.getElementById('search-count'); // NOVO: Elemento para o contador
+const searchCountSpan = document.getElementById('search-count');
 
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
@@ -66,7 +66,7 @@ const auth = getAuth(app);
 function renderizarMesas(mesasData) {
     document.querySelectorAll('.coluna-mesas').forEach(col => col.innerHTML = '');
     
-    let mesasEncontradas = 0; // NOVO: Contador de mesas encontradas
+    let mesasEncontradas = 0;
 
     for (const colId in layoutMesas) {
         const coluna = document.getElementById(colId);
@@ -79,7 +79,7 @@ function renderizarMesas(mesasData) {
                                     (mesaData.nome && mesaData.nome.toUpperCase().includes(termoBusca));
 
             if (correspondeBusca) {
-                mesasEncontradas++; // Incrementa o contador
+                mesasEncontradas++;
                 const mesaDiv = document.createElement('div');
                 mesaDiv.classList.add('mesa', mesaData.status);
                 mesaDiv.textContent = mesaNum.toString().padStart(2, '0');
@@ -95,7 +95,6 @@ function renderizarMesas(mesasData) {
             }
         });
     }
-    // NOVO: Atualiza o texto do contador
     searchCountSpan.textContent = `Mesas encontradas: ${mesasEncontradas}`;
 }
 
