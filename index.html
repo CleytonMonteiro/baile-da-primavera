@@ -16,6 +16,10 @@
         <button id="logout-btn" style="display: none;">Sair</button>
     </div>
 
+    <div class="search-container">
+        <input type="text" id="search-input" placeholder="Buscar por mesa ou nome..." autocomplete="off">
+    </div>
+
     <div class="legenda">
         <div class="legenda-item">
             <div class="legenda-cor" style="background-color: #28a745;"></div>
@@ -32,7 +36,6 @@
     </div>
 
     <div class="layout-salão">
-        
         <div class="scroll-container">
             <div class="secao-mesas" id="secao-esquerda">
                 <div class="coluna-mesas" id="col-esq-1"></div>
@@ -90,6 +93,7 @@
         </select>
         
         <div class="botoes-form">
+            <button id="liberar-btn" class="liberar-btn">Liberar Mesa</button>
             <button id="salvar-btn">Salvar</button>
             <button id="cancelar-btn">Cancelar</button>
         </div>

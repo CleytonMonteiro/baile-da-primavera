@@ -3,6 +3,17 @@ import { getDatabase, ref, onValue, set, child } from "https://www.gstatic.com/f
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-analytics.js";
 
+const firebaseConfig = {
+    apiKey: "AIzaSyDGVgqwdSOJJn0plwfKkHEsofxvfHFCf6w",
+    authDomain: "layoutsalaodefesta.firebaseapp.com",
+    databaseURL: "https://layoutsalaodefesta-default-rtdb.firebaseio.com",
+    projectId: "layoutsalaodefesta",
+    storageBucket: "layoutsalaodefesta.firebasestorage.app",
+    messagingSenderId: "1060371531536",
+    appId: "1:1060371531536:web:fbed496ff9a78982580795",
+    measurementId: "G-L21G98V5CL"
+};
+
 // REFACTOR: Definição única do layout das mesas para evitar duplicação
 const layoutMesas = {
     'col-esq-1': [101, 100, 99, 98, 97, 96, 95, 94],
@@ -24,50 +35,55 @@ const layoutMesas = {
     'col-dir-6': [8, 7, 6, 5, 4, 3, 2, 1]
 };
 
-const firebaseConfig = {
-    apiKey: "AIzaSyDGVgqwdSOJJn0plwfKkHEsofxvfHFCf6w",
-    authDomain: "layoutsalaodefesta.firebaseapp.com",
-    databaseURL: "https://layoutsalaodefesta-default-rtdb.firebaseio.com",
-    projectId: "layoutsalaodefesta",
-    storageBucket: "layoutsalaodefesta.firebasestorage.app",
-    messagingSenderId: "1060371531536",
-    appId: "1:1060371531536:web:fbed496ff9a78982580795",
-    measurementId: "G-L21G98V5CL"
-};
+// Variáveis de estado global
+let isLoggedIn = false;
+let mesasDataGlobal = {};
 
+// Elementos HTML
+const loginForm = document.getElementById('login-form');
+const loginEmailInput = document.getElementById('login-email');
+const loginSenhaInput = document.getElementById('login-senha');
+const loginBtn = document.getElementById('login-btn');
+const loginErroSpan = document.getElementById('login-erro');
+const cadastroForm = document.getElementById('cadastro-form');
+const mesaNumeroInput = document.getElementById('mesa-numero');
+const nomeCompletoInput = document.getElementById('nome-completo');
+const statusMesaSelect = document.getElementById('status-mesa');
+const salvarBtn = document.getElementById('salvar-btn');
+const liberarBtn = document.getElementById('liberar-btn');
+const cancelarBtn = document.getElementById('cancelar-btn');
+const authStatus = document.getElementById('auth-status');
+const statusText = document.getElementById('status-text');
+const logoutBtn = document.getElementById('logout-btn');
+const nomeErroSpan = document.getElementById('nome-erro');
+const scrollContainer = document.getElementById('scroll-container'); // O container principal das mesas
+const searchInput = document.getElementById('search-input');
+
+// Inicializa o Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const database = getDatabase(app);
 const mesasRef = ref(database, 'mesas');
 const auth = getAuth(app);
 
-document.addEventListener('DOMContentLoaded', () => {
-    const loginForm = document.getElementById('login-form');
-    const loginEmailInput = document.getElementById('login-email');
-    const loginSenhaInput = document.getElementById('login-senha');
-    const loginBtn = document.getElementById('login-btn');
-    const loginErroSpan = document.getElementById('login-erro');
-    const cadastroForm = document.getElementById('cadastro-form');
-    const mesaNumeroInput = document.getElementById('mesa-numero');
-    const nomeCompletoInput = document.getElementById('nome-completo');
-    const statusMesaSelect = document.getElementById('status-mesa');
-    const salvarBtn = document.getElementById('salvar-btn');
-    const cancelarBtn = document.getElementById('cancelar-btn');
-    const authStatus = document.getElementById('auth-status');
-    const statusText = document.getElementById('status-text');
-    const logoutBtn = document.getElementById('logout-btn');
-    const nomeErroSpan = document.getElementById('nome-erro');
+// ---- FUNÇÕES DE LÓGICA ----
 
-    let isLoggedIn = false;
+function renderizarMesas(mesasData) {
+    document.querySelectorAll('.coluna-mesas').forEach(col => col.innerHTML = '');
+    
+    for (const colId in layoutMesas) {
+        const coluna = document.getElementById(colId);
+        layoutMesas[colId].forEach(mesaNum => {
+            const mesaData = mesasData[mesaNum] || { status: 'livre', nome: '' };
 
-    function renderizarMesas(mesasData) {
-        document.querySelectorAll('.coluna-mesas').forEach(col => col.innerHTML = '');
-        
-        for (const colId in layoutMesas) {
-            const coluna = document.getElementById(colId);
-            layoutMesas[colId].forEach(mesaNum => {
+            // Verifica se a mesa corresponde ao termo de busca
+            const termoBusca = searchInput.value.toUpperCase().trim();
+            const correspondeBusca = termoBusca === '' || 
+                                    mesaNum.toString().includes(termoBusca) || 
+                                    (mesaData.nome && mesaData.nome.toUpperCase().includes(termoBusca));
+
+            if (correspondeBusca) {
                 const mesaDiv = document.createElement('div');
-                const mesaData = mesasData[mesaNum] || { status: 'livre', nome: '' };
                 mesaDiv.classList.add('mesa', mesaData.status);
                 mesaDiv.textContent = mesaNum.toString().padStart(2, '0');
                 mesaDiv.dataset.numero = mesaNum;
@@ -77,101 +93,134 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     mesaDiv.removeAttribute('data-tooltip');
                 }
-
-                mesaDiv.addEventListener('click', () => {
-                    if (isLoggedIn) {
-                        abrirFormulario(mesaNum, mesaData);
-                    } else {
-                        loginForm.style.display = 'flex';
-                    }
-                });
                 
                 coluna.appendChild(mesaDiv);
-            });
-        }
-    }
-
-    function abrirFormulario(numero, mesaData) {
-        mesaNumeroInput.value = numero;
-        nomeCompletoInput.value = mesaData.nome;
-        statusMesaSelect.value = mesaData.status;
-        nomeCompletoInput.classList.remove('input-erro');
-        nomeErroSpan.style.display = 'none';
-        cadastroForm.style.display = 'flex';
-    }
-
-    loginBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        const email = loginEmailInput.value;
-        const senha = loginSenhaInput.value;
-        signInWithEmailAndPassword(auth, email, senha)
-            .then((userCredential) => {
-                console.log("Login realizado com sucesso!");
-                loginForm.style.display = 'none';
-                loginErroSpan.style.display = 'none';
-            })
-            .catch((error) => {
-                console.error("Erro de login:", error);
-                loginErroSpan.style.display = 'block';
-                loginForm.classList.add('alerta-erro');
-            });
-    });
-
-    logoutBtn.addEventListener('click', () => {
-        signOut(auth).then(() => {
-            console.log("Logout realizado com sucesso.");
-        }).catch((error) => {
-            console.error("Erro ao fazer logout:", error);
+            }
         });
+    }
+}
+
+function abrirFormulario(numero, mesaData) {
+    mesaNumeroInput.value = numero;
+    nomeCompletoInput.value = mesaData.nome;
+    statusMesaSelect.value = mesaData.status;
+    nomeCompletoInput.classList.remove('input-erro');
+    nomeErroSpan.style.display = 'none';
+    
+    // Oculta o botão "Liberar" se a mesa já estiver livre
+    if (mesaData.status === 'livre') {
+        liberarBtn.style.display = 'none';
+    } else {
+        liberarBtn.style.display = 'inline-block';
+    }
+
+    cadastroForm.style.display = 'flex';
+}
+
+function fecharFormulario() {
+    cadastroForm.style.display = 'none';
+}
+
+function salvarMesa(status, nome) {
+    salvarBtn.textContent = 'Salvando...';
+    salvarBtn.disabled = true;
+
+    const numeroMesa = parseInt(mesaNumeroInput.value);
+    
+    const updateData = {
+        nome: nome,
+        status: status
+    };
+    
+    set(child(mesasRef, numeroMesa.toString()), updateData)
+        .then(() => {
+            console.log("Mesa atualizada no Firebase com sucesso!");
+            fecharFormulario();
+        })
+        .catch(error => {
+            console.error("Erro ao atualizar mesa no Firebase:", error);
+            alert("Erro ao salvar. Verifique a conexão com o Firebase.");
+        })
+        .finally(() => {
+            salvarBtn.textContent = 'Salvar';
+            salvarBtn.disabled = false;
+        });
+}
+
+function liberarMesa() {
+    salvarMesa('livre', '');
+}
+
+function handleLogin() {
+    const email = loginEmailInput.value;
+    const senha = loginSenhaInput.value;
+    signInWithEmailAndPassword(auth, email, senha)
+        .then(() => {
+            console.log("Login realizado com sucesso!");
+            loginForm.style.display = 'none';
+            loginErroSpan.style.display = 'none';
+        })
+        .catch((error) => {
+            console.error("Erro de login:", error);
+            loginErroSpan.style.display = 'block';
+            loginForm.classList.add('alerta-erro');
+        });
+}
+
+function handleLogout() {
+    signOut(auth).then(() => {
+        console.log("Logout realizado com sucesso.");
+    }).catch((error) => {
+        console.error("Erro ao fazer logout:", error);
+    });
+}
+
+// ---- DELEGAÇÃO DE EVENTOS E LISTENERS ----
+
+function setupEventListeners() {
+    // Delegação de eventos para as mesas
+    document.querySelector('.layout-salão').addEventListener('click', (e) => {
+        const mesa = e.target.closest('.mesa');
+        if (mesa && isLoggedIn) {
+            const numeroMesa = parseInt(mesa.dataset.numero);
+            const mesaData = mesasDataGlobal[numeroMesa] || { status: 'livre', nome: '' };
+            abrirFormulario(numeroMesa, mesaData);
+        } else if (mesa && !isLoggedIn) {
+            loginForm.style.display = 'flex';
+        }
     });
 
+    // Eventos do Formulário de Cadastro
     salvarBtn.addEventListener('click', () => {
         if (nomeCompletoInput.value.trim() === '') {
             nomeErroSpan.style.display = 'block';
             nomeCompletoInput.classList.add('input-erro');
             return;
         }
-        
         nomeErroSpan.style.display = 'none';
         nomeCompletoInput.classList.remove('input-erro');
-        
-        // NOVO: Feedback visual de salvamento
-        salvarBtn.textContent = 'Salvando...';
-        salvarBtn.disabled = true;
-
-        const numeroMesa = parseInt(mesaNumeroInput.value);
-        const novoNome = nomeCompletoInput.value;
-        const novoStatus = statusMesaSelect.value;
-        
-        const updateData = {
-            nome: novoNome,
-            status: novoStatus
-        };
-        
-        set(child(mesasRef, numeroMesa.toString()), updateData)
-            .then(() => {
-                console.log("Mesa atualizada no Firebase com sucesso!");
-                cadastroForm.style.display = 'none';
-            })
-            .catch(error => {
-                console.error("Erro ao atualizar mesa no Firebase:", error);
-                alert("Erro ao salvar. Verifique a conexão com o Firebase.");
-            })
-            .finally(() => {
-                // NOVO: Retorna o botão ao estado normal
-                salvarBtn.textContent = 'Salvar';
-                salvarBtn.disabled = false;
-            });
+        salvarMesa(statusMesaSelect.value, nomeCompletoInput.value);
     });
 
-    cancelarBtn.addEventListener('click', () => {
-        cadastroForm.style.display = 'none';
-    });
+    cancelarBtn.addEventListener('click', fecharFormulario);
+    nomeCompletoInput.addEventListener('input', (e) => e.target.value = e.target.value.toUpperCase());
     
-    nomeCompletoInput.addEventListener('input', (e) => {
-        e.target.value = e.target.value.toUpperCase();
-    });
+    // NOVO: Evento para o botão "Liberar Mesa"
+    liberarBtn.addEventListener('click', liberarMesa);
 
+    // Eventos de Autenticação
+    loginBtn.addEventListener('click', handleLogin);
+    logoutBtn.addEventListener('click', handleLogout);
+
+    // NOVO: Evento para o campo de busca
+    searchInput.addEventListener('input', () => renderizarMesas(mesasDataGlobal));
+}
+
+// ---- INICIALIZAÇÃO ----
+
+document.addEventListener('DOMContentLoaded', () => {
+    setupEventListeners();
+    
     onAuthStateChanged(auth, (user) => {
         if (user) {
             isLoggedIn = true;
@@ -185,9 +234,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     onValue(mesasRef, (snapshot) => {
-        const mesasData = snapshot.val();
-        if (mesasData) {
-            renderizarMesas(mesasData);
+        mesasDataGlobal = snapshot.val();
+        if (mesasDataGlobal) {
+            renderizarMesas(mesasDataGlobal);
         } else {
             console.log("Banco de dados vazio. Inicializando mesas...");
             const mesasIniciais = {};
