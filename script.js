@@ -14,7 +14,6 @@ const firebaseConfig = {
     measurementId: "G-L21G98V5CL"
 };
 
-// REFACTOR: Definição única do layout das mesas para evitar duplicação
 const layoutMesas = {
     'col-esq-1': [101, 100, 99, 98, 97, 96, 95, 94],
     'col-esq-2': [86, 87, 88, 89, 90, 91, 92, 93],
@@ -35,11 +34,9 @@ const layoutMesas = {
     'col-dir-6': [8, 7, 6, 5, 4, 3, 2, 1]
 };
 
-// Variáveis de estado global
 let isLoggedIn = false;
 let mesasDataGlobal = {};
 
-// Elementos HTML
 const loginForm = document.getElementById('login-form');
 const loginEmailInput = document.getElementById('login-email');
 const loginSenhaInput = document.getElementById('login-senha');
@@ -56,33 +53,33 @@ const authStatus = document.getElementById('auth-status');
 const statusText = document.getElementById('status-text');
 const logoutBtn = document.getElementById('logout-btn');
 const nomeErroSpan = document.getElementById('nome-erro');
-const scrollContainer = document.getElementById('scroll-container'); // O container principal das mesas
+const scrollContainer = document.getElementById('scroll-container');
 const searchInput = document.getElementById('search-input');
+const searchCountSpan = document.getElementById('search-count'); // NOVO: Elemento para o contador
 
-// Inicializa o Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const database = getDatabase(app);
 const mesasRef = ref(database, 'mesas');
 const auth = getAuth(app);
 
-// ---- FUNÇÕES DE LÓGICA ----
-
 function renderizarMesas(mesasData) {
     document.querySelectorAll('.coluna-mesas').forEach(col => col.innerHTML = '');
     
+    let mesasEncontradas = 0; // NOVO: Contador de mesas encontradas
+
     for (const colId in layoutMesas) {
         const coluna = document.getElementById(colId);
         layoutMesas[colId].forEach(mesaNum => {
             const mesaData = mesasData[mesaNum] || { status: 'livre', nome: '' };
 
-            // Verifica se a mesa corresponde ao termo de busca
             const termoBusca = searchInput.value.toUpperCase().trim();
             const correspondeBusca = termoBusca === '' || 
                                     mesaNum.toString().includes(termoBusca) || 
                                     (mesaData.nome && mesaData.nome.toUpperCase().includes(termoBusca));
 
             if (correspondeBusca) {
+                mesasEncontradas++; // Incrementa o contador
                 const mesaDiv = document.createElement('div');
                 mesaDiv.classList.add('mesa', mesaData.status);
                 mesaDiv.textContent = mesaNum.toString().padStart(2, '0');
@@ -98,6 +95,8 @@ function renderizarMesas(mesasData) {
             }
         });
     }
+    // NOVO: Atualiza o texto do contador
+    searchCountSpan.textContent = `Mesas encontradas: ${mesasEncontradas}`;
 }
 
 function abrirFormulario(numero, mesaData) {
@@ -107,7 +106,6 @@ function abrirFormulario(numero, mesaData) {
     nomeCompletoInput.classList.remove('input-erro');
     nomeErroSpan.style.display = 'none';
     
-    // Oculta o botão "Liberar" se a mesa já estiver livre
     if (mesaData.status === 'livre') {
         liberarBtn.style.display = 'none';
     } else {
@@ -175,10 +173,7 @@ function handleLogout() {
     });
 }
 
-// ---- DELEGAÇÃO DE EVENTOS E LISTENERS ----
-
 function setupEventListeners() {
-    // Delegação de eventos para as mesas
     document.querySelector('.layout-salão').addEventListener('click', (e) => {
         const mesa = e.target.closest('.mesa');
         if (mesa && isLoggedIn) {
@@ -190,7 +185,6 @@ function setupEventListeners() {
         }
     });
 
-    // Eventos do Formulário de Cadastro
     salvarBtn.addEventListener('click', () => {
         if (nomeCompletoInput.value.trim() === '') {
             nomeErroSpan.style.display = 'block';
@@ -205,18 +199,13 @@ function setupEventListeners() {
     cancelarBtn.addEventListener('click', fecharFormulario);
     nomeCompletoInput.addEventListener('input', (e) => e.target.value = e.target.value.toUpperCase());
     
-    // NOVO: Evento para o botão "Liberar Mesa"
     liberarBtn.addEventListener('click', liberarMesa);
 
-    // Eventos de Autenticação
     loginBtn.addEventListener('click', handleLogin);
     logoutBtn.addEventListener('click', handleLogout);
 
-    // NOVO: Evento para o campo de busca
     searchInput.addEventListener('input', () => renderizarMesas(mesasDataGlobal));
 }
-
-// ---- INICIALIZAÇÃO ----
 
 document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
