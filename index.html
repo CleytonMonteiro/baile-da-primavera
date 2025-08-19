@@ -50,9 +50,8 @@
             align-items: center;
         }
         
-        /* Contêiner de rolagem - NOVO LAYOUT GRID PARA MOBILE */
         .scroll-container {
-            display: flex; /* Mantém o layout flex para desktop */
+            display: flex;
             justify-content: center;
             gap: 50px;
             width: 100%;
@@ -60,11 +59,11 @@
 
         @media (max-width: 768px) {
             .scroll-container {
-                display: grid; /* Mudar para layout de grade no celular */
-                grid-auto-flow: column; /* Organiza os itens em colunas */
-                grid-auto-columns: min-content; /* O tamanho da coluna se adapta ao conteúdo */
+                display: grid;
+                grid-auto-flow: column;
+                grid-auto-columns: min-content;
                 gap: 20px;
-                overflow-x: auto; /* Adiciona rolagem horizontal */
+                overflow-x: auto;
                 justify-content: flex-start;
                 width: 100%;
                 padding: 0 10px;
@@ -82,7 +81,6 @@
             gap: 10px;
         }
 
-        /* Estilo da seção do centro */
         .secao-centro {
             display: flex;
             flex-direction: row;
@@ -145,8 +143,9 @@
             background-color: #dc3545;
             color: white;
         }
-        
-        #cadastro-form {
+
+        /* ESTILOS ADICIONAIS PARA OS NOVOS FORMULÁRIOS */
+        .modal {
             position: fixed;
             top: 50%;
             left: 50%;
@@ -161,21 +160,21 @@
             gap: 15px;
         }
         
-        #cadastro-form.alerta-erro {
+        .modal.alerta-erro {
             border: 2px solid #dc3545;
         }
-
-        #cadastro-form h2 {
+        
+        .modal h2 {
             margin-top: 0;
             color: #333;
         }
         
-        #cadastro-form label {
+        .modal label {
             font-weight: bold;
             color: #555;
         }
 
-        #cadastro-form input, #cadastro-form select {
+        .modal input, .modal select {
             width: 100%;
             padding: 10px;
             border: 1px solid #ccc;
@@ -183,17 +182,7 @@
             box-sizing: border-box;
         }
         
-        #senha-supervisor {
-            font-family: monospace;
-        }
-
-        .botoes-form {
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        .botoes-form button {
+        .modal button {
             padding: 10px 20px;
             border: none;
             border-radius: 5px;
@@ -203,13 +192,19 @@
             color: white;
             transition: background-color 0.2s;
         }
-        
-        #salvar-btn {
+
+        #login-btn, #salvar-btn {
             background-color: #007bff;
         }
 
-        #salvar-btn:hover {
+        #login-btn:hover, #salvar-btn:hover {
             background-color: #0056b3;
+        }
+
+        .botoes-form {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
         }
 
         #cancelar-btn {
@@ -219,18 +214,48 @@
         #cancelar-btn:hover {
             background-color: #5a6268;
         }
-
+        
         #mensagem-erro {
             color: #dc3545;
             font-size: 0.9em;
             margin-top: -10px;
             display: none;
         }
+
+        #auth-status {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-weight: bold;
+            color: #555;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #logout-btn {
+            background-color: #dc3545;
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #logout-btn:hover {
+            background-color: #a71d2a;
+        }
     </style>
 </head>
 <body>
 
     <h1>BAILE DA PRIMAVERA</h1>
+
+    <div id="auth-status">
+        <span id="status-text">Faça login para gerenciar as mesas.</span>
+        <button id="logout-btn" style="display: none;">Sair</button>
+    </div>
 
     <div class="legenda">
         <div class="legenda-item">
@@ -278,7 +303,19 @@
         </div>
     </div>
 
-    <div id="cadastro-form">
+    <div id="login-form" class="modal">
+        <h2>Login do Supervisor</h2>
+        <label for="login-email">E-mail:</label>
+        <input type="email" id="login-email" placeholder="E-mail de supervisor" required>
+        
+        <label for="login-senha">Senha:</label>
+        <input type="password" id="login-senha" placeholder="Senha" required>
+        <span id="login-erro" style="color: red; display: none;">E-mail ou senha incorretos.</span>
+
+        <button id="login-btn">Entrar</button>
+    </div>
+
+    <div id="cadastro-form" class="modal">
         <h2>Cadastro de Mesa</h2>
         <input type="hidden" id="mesa-numero">
         
@@ -292,10 +329,6 @@
             <option value="vendida">Vendida</option>
         </select>
         
-        <label for="senha-supervisor">Senha do Supervisor:</label>
-        <input type="password" id="senha-supervisor" placeholder="Digite a senha" required>
-        <span id="mensagem-erro">Senha incorreta. Por favor, tente novamente.</span>
-
         <div class="botoes-form">
             <button id="salvar-btn">Salvar</button>
             <button id="cancelar-btn">Cancelar</button>
@@ -305,6 +338,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
         import { getDatabase, ref, onValue, set, child } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-analytics.js";
 
         const firebaseConfig = {
@@ -322,40 +356,48 @@
         const analytics = getAnalytics(app);
         const database = getDatabase(app);
         const mesasRef = ref(database, 'mesas');
+        const auth = getAuth(app);
 
         document.addEventListener('DOMContentLoaded', () => {
+            const loginForm = document.getElementById('login-form');
+            const loginEmailInput = document.getElementById('login-email');
+            const loginSenhaInput = document.getElementById('login-senha');
+            const loginBtn = document.getElementById('login-btn');
+            const loginErroSpan = document.getElementById('login-erro');
             const cadastroForm = document.getElementById('cadastro-form');
             const mesaNumeroInput = document.getElementById('mesa-numero');
             const nomeCompletoInput = document.getElementById('nome-completo');
             const statusMesaSelect = document.getElementById('status-mesa');
-            const senhaSupervisorInput = document.getElementById('senha-supervisor');
             const salvarBtn = document.getElementById('salvar-btn');
             const cancelarBtn = document.getElementById('cancelar-btn');
-            const mensagemErro = document.getElementById('mensagem-erro');
-            const senhaCorreta = "100945";
+            const authStatus = document.getElementById('auth-status');
+            const statusText = document.getElementById('status-text');
+            const logoutBtn = document.getElementById('logout-btn');
 
-            const layoutMesas = {
-                'col-esq-1': [101, 100, 99, 98, 97, 96, 95, 94],
-                'col-esq-2': [86, 87, 88, 89, 90, 91, 92, 93],
-                'col-esq-3': [85, 84, 83, 82, 81, 80, 79, 78], 
-                'col-esq-4': [70, 71, 72, 73, 74, 75, 76, 77],
-                'col-cen-1': [69, 68, 67],
-                'col-cen-2': [64, 65, 66],
-                'col-cen-3': [63, 62, 61],
-                'col-cen-4': [58, 59, 60],
-                'col-cen-5': [57, 56, 55],
-                'col-cen-6': [52, 53, 54],
-                'col-cen-7': [51, 50, 49],
-                'col-dir-1': [41, 42, 43, 44, 45, 46, 47, 48],
-                'col-dir-2': [40, 39, 38, 37, 36, 35, 34, 33],
-                'col-dir-3': [25, 26, 27, 28, 29, 30, 31, 32],
-                'col-dir-4': [24, 23, 22, 21, 20, 19, 18, 17],
-                'col-dir-5': [9, 10, 11, 12, 13, 14, 15, 16],
-                'col-dir-6': [8, 7, 6, 5, 4, 3, 2, 1]
-            };
-            
+            let isLoggedIn = false;
+
+            // Renderiza as mesas no layout
             function renderizarMesas(mesasData) {
                 document.querySelectorAll('.coluna-mesas').forEach(col => col.innerHTML = '');
+                const layoutMesas = {
+                    'col-esq-1': [101, 100, 99, 98, 97, 96, 95, 94],
+                    'col-esq-2': [86, 87, 88, 89, 90, 91, 92, 93],
+                    'col-esq-3': [85, 84, 83, 82, 81, 80, 79, 78], 
+                    'col-esq-4': [70, 71, 72, 73, 74, 75, 76, 77],
+                    'col-cen-1': [69, 68, 67],
+                    'col-cen-2': [64, 65, 66],
+                    'col-cen-3': [63, 62, 61],
+                    'col-cen-4': [58, 59, 60],
+                    'col-cen-5': [57, 56, 55],
+                    'col-cen-6': [52, 53, 54],
+                    'col-cen-7': [51, 50, 49],
+                    'col-dir-1': [41, 42, 43, 44, 45, 46, 47, 48],
+                    'col-dir-2': [40, 39, 38, 37, 36, 35, 34, 33],
+                    'col-dir-3': [25, 26, 27, 28, 29, 30, 31, 32],
+                    'col-dir-4': [24, 23, 22, 21, 20, 19, 18, 17],
+                    'col-dir-5': [9, 10, 11, 12, 13, 14, 15, 16],
+                    'col-dir-6': [8, 7, 6, 5, 4, 3, 2, 1]
+                };
                 
                 for (const colId in layoutMesas) {
                     const coluna = document.getElementById(colId);
@@ -373,7 +415,11 @@
                         }
 
                         mesaDiv.addEventListener('click', () => {
-                            abrirFormulario(mesaNum, mesaData);
+                            if (isLoggedIn) {
+                                abrirFormulario(mesaNum, mesaData);
+                            } else {
+                                loginForm.style.display = 'flex';
+                            }
                         });
                         
                         coluna.appendChild(mesaDiv);
@@ -381,53 +427,107 @@
                 }
             }
 
+            // Abre o formulário de cadastro de mesa
             function abrirFormulario(numero, mesaData) {
                 mesaNumeroInput.value = numero;
                 nomeCompletoInput.value = mesaData.nome;
                 statusMesaSelect.value = mesaData.status;
-                senhaSupervisorInput.value = '';
-                mensagemErro.style.display = 'none';
-                cadastroForm.classList.remove('alerta-erro');
                 cadastroForm.style.display = 'flex';
             }
 
-            salvarBtn.addEventListener('click', () => {
-                if (senhaSupervisorInput.value.trim() === senhaCorreta) {
-                    const numeroMesa = parseInt(mesaNumeroInput.value);
-                    const novoNome = nomeCompletoInput.value;
-                    const novoStatus = statusMesaSelect.value;
-                    
-                    const updateData = {
-                        nome: novoNome,
-                        status: novoStatus
-                    };
-                    
-                    set(child(mesasRef, numeroMesa.toString()), updateData)
-                        .then(() => {
-                            console.log("Mesa atualizada no Firebase com sucesso!");
-                            cadastroForm.style.display = 'none';
-                        })
-                        .catch(error => {
-                            console.error("Erro ao atualizar mesa no Firebase:", error);
-                            alert("Erro ao salvar. Verifique a conexão com o Firebase.");
-                        });
-
-                } else {
-                    mensagemErro.style.display = 'block';
-                    cadastroForm.classList.add('alerta-erro');
-                }
+            // Lida com o login
+            loginBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const email = loginEmailInput.value;
+                const senha = loginSenhaInput.value;
+                signInWithEmailAndPassword(auth, email, senha)
+                    .then((userCredential) => {
+                        console.log("Login realizado com sucesso!");
+                        loginForm.style.display = 'none';
+                        loginErroSpan.style.display = 'none';
+                    })
+                    .catch((error) => {
+                        console.error("Erro de login:", error);
+                        loginErroSpan.style.display = 'block';
+                        loginForm.classList.add('alerta-erro');
+                    });
             });
 
+            // Lida com o logout
+            logoutBtn.addEventListener('click', () => {
+                signOut(auth).then(() => {
+                    console.log("Logout realizado com sucesso.");
+                }).catch((error) => {
+                    console.error("Erro ao fazer logout:", error);
+                });
+            });
+
+            // Lida com o salvamento do formulário de cadastro
+            salvarBtn.addEventListener('click', () => {
+                const numeroMesa = parseInt(mesaNumeroInput.value);
+                const novoNome = nomeCompletoInput.value;
+                const novoStatus = statusMesaSelect.value;
+                
+                const updateData = {
+                    nome: novoNome,
+                    status: novoStatus
+                };
+                
+                set(child(mesasRef, numeroMesa.toString()), updateData)
+                    .then(() => {
+                        console.log("Mesa atualizada no Firebase com sucesso!");
+                        cadastroForm.style.display = 'none';
+                    })
+                    .catch(error => {
+                        console.error("Erro ao atualizar mesa no Firebase:", error);
+                        alert("Erro ao salvar. Verifique a conexão com o Firebase.");
+                    });
+            });
+
+            // Lida com o cancelamento do formulário de cadastro
             cancelarBtn.addEventListener('click', () => {
                 cadastroForm.style.display = 'none';
             });
             
+            // Monitora o estado de autenticação do usuário
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    isLoggedIn = true;
+                    statusText.textContent = `Logado como: ${user.email}`;
+                    logoutBtn.style.display = 'inline-block';
+                } else {
+                    isLoggedIn = false;
+                    statusText.textContent = 'Faça login para gerenciar as mesas.';
+                    logoutBtn.style.display = 'none';
+                }
+            });
+
+            // Carrega os dados das mesas
             onValue(mesasRef, (snapshot) => {
                 const mesasData = snapshot.val();
                 if (mesasData) {
                     renderizarMesas(mesasData);
                 } else {
                     console.log("Banco de dados vazio. Inicializando mesas...");
+                    const layoutMesas = {
+                        'col-esq-1': [101, 100, 99, 98, 97, 96, 95, 94],
+                        'col-esq-2': [86, 87, 88, 89, 90, 91, 92, 93],
+                        'col-esq-3': [85, 84, 83, 82, 81, 80, 79, 78], 
+                        'col-esq-4': [70, 71, 72, 73, 74, 75, 76, 77],
+                        'col-cen-1': [69, 68, 67],
+                        'col-cen-2': [64, 65, 66],
+                        'col-cen-3': [63, 62, 61],
+                        'col-cen-4': [58, 59, 60],
+                        'col-cen-5': [57, 56, 55],
+                        'col-cen-6': [52, 53, 54],
+                        'col-cen-7': [51, 50, 49],
+                        'col-dir-1': [41, 42, 43, 44, 45, 46, 47, 48],
+                        'col-dir-2': [40, 39, 38, 37, 36, 35, 34, 33],
+                        'col-dir-3': [25, 26, 27, 28, 29, 30, 31, 32],
+                        'col-dir-4': [24, 23, 22, 21, 20, 19, 18, 17],
+                        'col-dir-5': [9, 10, 11, 12, 13, 14, 15, 16],
+                        'col-dir-6': [8, 7, 6, 5, 4, 3, 2, 1]
+                    };
                     const mesasIniciais = {};
                     for (const colId in layoutMesas) {
                         layoutMesas[colId].forEach(mesaNum => {
