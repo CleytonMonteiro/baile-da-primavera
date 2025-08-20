@@ -14,9 +14,7 @@ const firebaseConfig = {
     measurementId: "G-L21G98V5CL"
 };
 
-// REMOVIDO: O objeto layoutMesas agora será carregado do Firebase.
 let layoutMesasGlobal = {};
-
 let isLoggedIn = false;
 let mesasDataGlobal = {};
 
@@ -47,7 +45,7 @@ const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const database = getDatabase(app);
 const mesasRef = ref(database, 'mesas');
-const layoutRef = ref(database, 'layoutMesas'); // NOVO: Referência para o layout no Firebase
+const layoutRef = ref(database, 'layoutMesas');
 const auth = getAuth(app);
 
 function renderizarMesas(mesasData) {
@@ -57,7 +55,7 @@ function renderizarMesas(mesasData) {
 
     for (const colId in layoutMesasGlobal) {
         const coluna = document.getElementById(colId);
-        if (!coluna) continue; // Garante que a coluna existe no HTML
+        if (!coluna) continue;
         
         layoutMesasGlobal[colId].forEach(mesaNum => {
             const mesaData = mesasData[mesaNum] || { status: 'livre', nome: '' };
@@ -75,7 +73,7 @@ function renderizarMesas(mesasData) {
                 mesaDiv.dataset.numero = mesaNum;
                 
                 if (mesaData.status !== 'livre' && mesaData.nome) {
-                    mesaDiv.setAttribute('data-tooltip', `Responsável: ${mesaData.nome}`);
+                    mesaDiv.setAttribute('data-tooltip', mesaData.nome);
                 } else {
                     mesaDiv.removeAttribute('data-tooltip');
                 }
@@ -86,8 +84,6 @@ function renderizarMesas(mesasData) {
     }
     searchCountSpan.textContent = `Mesas encontradas: ${mesasEncontradas}`;
 }
-
-// ... (O resto do código permanece o mesmo)
 
 function abrirFormulario(numero, mesaData) {
     sideMenu.classList.remove('open'); 
@@ -185,6 +181,7 @@ function setupEventListeners() {
     loginBtn.addEventListener('click', handleLogin);
     logoutBtn.addEventListener('click', handleLogout);
     searchInput.addEventListener('input', () => renderizarMesas(mesasDataGlobal));
+    
     menuBtn.addEventListener('click', () => sideMenu.classList.add('open'));
     closeMenuBtn.addEventListener('click', () => sideMenu.classList.remove('open'));
 }
@@ -203,7 +200,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // NOVO: Carrega o layout do Firebase
     onValue(layoutRef, (snapshot) => {
         const layoutData = snapshot.val();
         if (layoutData) {
@@ -225,7 +221,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         } else {
             console.warn("Nenhum layout encontrado no Firebase. Por favor, configure-o no Painel de Admin.");
-            // Mostra uma mensagem de aviso na tela se não houver layout
             document.querySelector('.layout-salão').innerHTML = '<h2>Nenhum layout encontrado. Por favor, acesse o <a href="admin.html">Painel de Admin</a> para configurar o layout inicial.</h2>';
         }
     });
