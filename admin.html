@@ -5,40 +5,162 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel de Administração - Baile da Primavera</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         .admin-container {
-            max-width: 800px;
+            max-width: 1400px;
             width: 100%;
-            margin-top: 50px;
+            margin-top: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            text-align: center;
         }
-        #layout-json {
+
+        /* NOVO: Estilos para o container principal e o scroll */
+        .layout-salão-admin {
             width: 100%;
-            min-height: 400px;
-            font-family: monospace;
-            font-size: 14px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            margin-bottom: 20px;
+            overflow-x: auto;
+            background-color: #f0f2f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
         }
+
+        .scroll-container-admin {
+            display: flex;
+            gap: 30px; /* Espaço entre as seções */
+            padding: 10px;
+        }
+
+        /* NOVO: Estilos para cada seção de colunas */
+        .secao-admin {
+            display: flex;
+            gap: 15px; /* Espaço entre as colunas dentro de uma seção */
+        }
+
+        .coluna-admin {
+            min-height: 400px;
+            min-width: 80px;
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            border: 2px dashed #ccc;
+            position: relative;
+        }
+        
+        .coluna-admin:empty {
+            border: 2px dashed #aaa;
+            background-color: #eee;
+        }
+        
+        .coluna-admin .excluir-coluna-btn {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.8em;
+            cursor: pointer;
+            z-index: 1;
+        }
+
+        .sortable-drag {
+            opacity: 0.5;
+        }
+
+        .sortable-ghost {
+            background-color: #c9e2ff;
+            border: 2px dashed #007bff;
+        }
+        
+        .mesa {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            position: relative;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            font-weight: bold;
+            font-size: 1.2em;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: move;
+            flex-shrink: 0;
+            background-color: #6c757d; /* Cor padrão para mesas no admin */
+        }
+        
+        /* Estilos dos botões de exclusão */
+        .excluir-mesa-btn {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7em;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 1;
+        }
+
+        .botoes-admin {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .botoes-admin button {
+            padding: 8px 15px;
+            font-size: 0.9em;
+        }
+        
+        /* Estilos para o modo de exclusão */
+        .delete-mode .excluir-mesa-btn,
+        .delete-mode .excluir-coluna-btn {
+            display: flex;
+        }
+        
+        .delete-mode .mesa, .delete-mode .coluna-admin {
+            cursor: not-allowed;
+            border: 2px dashed #dc3545;
+        }
+
     </style>
 </head>
 <body>
+
+    <h1>Painel de Administração</h1>
 
     <div id="auth-status-admin">
         <span id="status-text-admin">Aguardando login...</span>
         <button id="logout-btn-admin" style="display: none;">Sair</button>
     </div>
 
-    <h1>Painel de Administração</h1>
-
     <div id="admin-login-form" class="modal" style="display: flex;">
-        <h2>Login do Supervisor</h2>
+        <h2>Login do Administrador</h2>
         <label for="login-email-admin">E-mail:</label>
-        <input type="email" id="login-email-admin" placeholder="E-mail de supervisor" required>
+        <input type="email" id="login-email-admin" placeholder="E-mail de admin" required>
         <label for="login-senha-admin">Senha:</label>
         <input type="password" id="login-senha-admin" placeholder="Senha" required>
         <span id="login-erro-admin" class="mensagem-erro">E-mail ou senha incorretos.</span>
@@ -46,13 +168,27 @@
     </div>
 
     <div class="admin-container" id="admin-content" style="display: none;">
-        <h3>Editar Layout das Mesas</h3>
-        <p>Atenção: Edite o JSON abaixo com cuidado. Qualquer erro de sintaxe pode quebrar o layout.</p>
-        <textarea id="layout-json"></textarea>
-        <button id="salvar-layout-btn" class="salvar-btn">Salvar Layout</button>
-        <button onclick="window.location.href='index.html'" class="voltar-btn">Voltar para o Salão</button>
+        <h3>Editar Layout das Mesas (Arraste e solte as mesas e colunas)</h3>
+        
+        <div class="layout-salão-admin">
+            <div class="scroll-container-admin">
+                <div class="secao-admin" id="secao-esquerda-admin"></div>
+                <div class="secao-admin" id="secao-centro-admin"></div>
+                <div class="secao-admin" id="secao-direita-admin"></div>
+            </div>
+        </div>
+        
+        <div class="botoes-admin">
+            <button id="add-coluna-btn">Adicionar Coluna</button>
+            <button id="add-mesa-btn">Adicionar Nova Mesa</button>
+            <button id="reset-mesas-btn" class="reset-btn">Resetar Mesas</button>
+            <button id="salvar-layout-btn">Salvar Layout</button>
+            <button onclick="window.location.href='index.html'" class="voltar-btn">Voltar para o Salão</button>
+            <button id="toggle-excluir-btn">Modo Excluir</button>
+        </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
     <script src="admin.js" type="module"></script>
 </body>
 </html>
