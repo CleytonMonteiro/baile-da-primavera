@@ -35,11 +35,9 @@ const resetMesasBtn = document.getElementById('reset-mesas-btn');
 const addColunaBtn = document.getElementById('add-coluna-btn');
 const toggleExcluirBtn = document.getElementById('toggle-excluir-btn');
 
-// NOVO: Selecionando as seções de layout
 const secaoEsquerdaAdmin = document.getElementById('secao-esquerda-admin');
 const secaoCentroAdmin = document.getElementById('secao-centro-admin');
 const secaoDireitaAdmin = document.getElementById('secao-direita-admin');
-
 
 let mesasDataGlobal = {};
 let layoutMesasGlobal = {};
@@ -56,7 +54,6 @@ function handleAdminLogout() {
 }
 
 function renderizarLayoutAdmin() {
-    // Limpa todas as seções antes de renderizar
     secaoEsquerdaAdmin.innerHTML = '';
     secaoCentroAdmin.innerHTML = '';
     secaoDireitaAdmin.innerHTML = '';
@@ -91,14 +88,13 @@ function renderizarLayoutAdmin() {
             colunaDiv.appendChild(mesaDiv);
         });
 
-        // NOVO: Lógica para distribuir as colunas nas seções corretas
         if (colId.startsWith('col-esq')) {
             secaoEsquerdaAdmin.appendChild(colunaDiv);
         } else if (colId.startsWith('col-cen')) {
             secaoCentroAdmin.appendChild(colunaDiv);
         } else if (colId.startsWith('col-dir')) {
             secaoDireitaAdmin.appendChild(colunaDiv);
-        } else { // Coloca colunas novas ou não identificadas na primeira seção
+        } else {
             secaoEsquerdaAdmin.appendChild(colunaDiv);
         }
     }
@@ -113,10 +109,9 @@ function renderizarLayoutAdmin() {
 }
 
 function inicializarSortable() {
-    // NOVO: Torna as seções sortable para permitir mover colunas ENTRE elas
     [secaoEsquerdaAdmin, secaoCentroAdmin, secaoDireitaAdmin].forEach(secao => {
         new Sortable(secao, {
-            group: 'colunas', // Permite arrastar colunas entre as seções
+            group: 'colunas',
             handle: '.coluna-admin',
             animation: 150,
             ghostClass: 'sortable-ghost',
@@ -124,11 +119,10 @@ function inicializarSortable() {
         });
     });
     
-    // Mantém a lógica para tornar o interior das colunas sortable para as mesas
     const colunas = document.querySelectorAll('.coluna-admin');
     colunas.forEach(coluna => {
         new Sortable(coluna, {
-            group: 'mesas', // Permite arrastar mesas entre QUALQUER coluna
+            group: 'mesas',
             animation: 150,
             ghostClass: 'sortable-ghost',
             dragClass: 'sortable-drag'
@@ -214,9 +208,8 @@ function adicionarColuna() {
     excluirColunaBtn.textContent = 'X';
     colunaDiv.appendChild(excluirColunaBtn);
     
-    // NOVO: Adiciona a nova coluna na primeira seção por padrão
     secaoEsquerdaAdmin.appendChild(colunaDiv);
-    inicializarSortable(); // Re-inicializa para que a nova coluna também seja funcional
+    inicializarSortable();
 }
 
 function excluirColuna(colunaDiv) {
@@ -244,7 +237,6 @@ function toggleDeleteMode() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Delegate click events for delete buttons
     adminContent.addEventListener('click', (e) => {
         if (isDeleteMode) {
             const mesaBtn = e.target.closest('.excluir-mesa-btn');
@@ -268,8 +260,14 @@ document.addEventListener('DOMContentLoaded', () => {
     adminLogoutBtn.addEventListener('click', handleAdminLogout);
     
     onAuthStateChanged(auth, (user) => {
-        isLoggedIn = !!user;
-        if (user) {
+        // --- INÍCIO DA ALTERAÇÃO ---
+        
+        // 1. E-mail com permissão de administrador
+        const adminEmail = "cleyton@aabb-aracaju.com.br"; 
+
+        // 2. Verifica se o usuário está logado E se o e-mail dele é o e-mail do admin
+        if (user && user.email === adminEmail) {
+            isLoggedIn = true;
             adminStatusText.textContent = `Logado como: ${user.email}`;
             adminLogoutBtn.style.display = 'inline-block';
             adminContent.style.display = 'flex';
@@ -284,10 +282,20 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
         } else {
+            // Se o usuário não estiver logado OU não for o admin, esconde o painel
+            isLoggedIn = false;
             adminStatusText.textContent = 'Faça login para gerenciar.';
             adminLogoutBtn.style.display = 'none';
             adminContent.style.display = 'none';
             adminLoginForm.style.display = 'flex';
+
+            // 3. Se um usuário qualquer conseguiu logar, mas não é o admin,
+            //    nós o deslogamos e mostramos um alerta.
+            if (user) {
+                signOut(auth); // Desloga o usuário não autorizado
+                alert("Acesso negado. Você não tem permissão para acessar este painel.");
+            }
         }
+        // --- FIM DA ALTERAÇÃO ---
     });
 });
