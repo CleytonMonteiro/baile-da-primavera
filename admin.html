@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Administração - Baile da Primavera</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .admin-container {
+            max-width: 800px;
+            width: 100%;
+            margin-top: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #layout-json {
+            width: 100%;
+            min-height: 400px;
+            font-family: monospace;
+            font-size: 14px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="auth-status-admin">
+        <span id="status-text-admin">Aguardando login...</span>
+        <button id="logout-btn-admin" style="display: none;">Sair</button>
+    </div>
+
+    <h1>Painel de Administração</h1>
+
+    <div id="admin-login-form" class="modal" style="display: flex;">
+        <h2>Login do Supervisor</h2>
+        <label for="login-email-admin">E-mail:</label>
+        <input type="email" id="login-email-admin" placeholder="E-mail de supervisor" required>
+        <label for="login-senha-admin">Senha:</label>
+        <input type="password" id="login-senha-admin" placeholder="Senha" required>
+        <span id="login-erro-admin" class="mensagem-erro">E-mail ou senha incorretos.</span>
+        <button id="login-btn-admin">Entrar</button>
+    </div>
+
+    <div class="admin-container" id="admin-content" style="display: none;">
+        <h3>Editar Layout das Mesas</h3>
+        <p>Atenção: Edite o JSON abaixo com cuidado. Qualquer erro de sintaxe pode quebrar o layout.</p>
+        <textarea id="layout-json"></textarea>
+        <button id="salvar-layout-btn" class="salvar-btn">Salvar Layout</button>
+        <button onclick="window.location.href='index.html'" class="voltar-btn">Voltar para o Salão</button>
+    </div>
+
+    <script src="admin.js" type="module"></script>
+</body>
+</html>
