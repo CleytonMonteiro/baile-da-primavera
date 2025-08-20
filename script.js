@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-import { getDatabase, ref, onValue, set, child } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
+import { getDatabase, ref, onValue, set, update } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-analytics.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDGVgqwdSOJJn0plwfKkHEsofxvfHFCf6w",
@@ -14,214 +13,176 @@ const firebaseConfig = {
     measurementId: "G-L21G98V5CL"
 };
 
-let layoutMesasGlobal = {};
-let isLoggedIn = false;
-let mesasDataGlobal = {};
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
+const auth = getAuth(app);
+const layoutRef = ref(database, 'layoutMesas');
+const mesasRef = ref(database, 'mesas');
+
+const layoutContainer = document.querySelector('.scroll-container');
+const statusText = document.getElementById('status-text');
+const logoutBtn = document.getElementById('logout-btn');
+const loadingOverlay = document.getElementById('loading-overlay');
 
 const loginForm = document.getElementById('login-form');
 const loginEmailInput = document.getElementById('login-email');
 const loginSenhaInput = document.getElementById('login-senha');
 const loginBtn = document.getElementById('login-btn');
 const loginErroSpan = document.getElementById('login-erro');
+const cancelarLoginBtn = document.getElementById('cancelar-login-btn');
+
 const cadastroForm = document.getElementById('cadastro-form');
+const modalTitulo = document.getElementById('modal-titulo');
+const modalNumeroMesa = document.getElementById('modal-numero-mesa');
 const mesaNumeroInput = document.getElementById('mesa-numero');
 const nomeCompletoInput = document.getElementById('nome-completo');
 const statusMesaSelect = document.getElementById('status-mesa');
 const salvarBtn = document.getElementById('salvar-btn');
-const liberarBtn = document.getElementById('liberar-btn');
 const cancelarBtn = document.getElementById('cancelar-btn');
-const authStatus = document.getElementById('auth-status');
-const statusText = document.getElementById('status-text');
-const logoutBtn = document.getElementById('logout-btn');
+const liberarBtn = document.getElementById('liberar-btn');
 const nomeErroSpan = document.getElementById('nome-erro');
-const scrollContainer = document.getElementById('scroll-container');
-const searchInput = document.getElementById('search-input');
-const searchCountSpan = document.getElementById('search-count');
-const menuBtn = document.getElementById('menu-btn');
-const closeMenuBtn = document.getElementById('close-menu-btn');
-const sideMenu = document.getElementById('side-menu');
 
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-const database = getDatabase(app);
-const mesasRef = ref(database, 'mesas');
-const layoutRef = ref(database, 'layoutMesas');
-const auth = getAuth(app);
+let mesasDataGlobal = {};
+let layoutMesasGlobal = {};
+let isSupervisorLoggedIn = false;
 
-function renderizarMesas(mesasData) {
-    document.querySelectorAll('.coluna-mesas').forEach(col => col.innerHTML = '');
-    
-    let mesasEncontradas = 0;
+function showToast(text, isError = false) {
+    Toastify({
+        text: text,
+        duration: 3000,
+        gravity: "top",
+        position: "right",
+        backgroundColor: isError ? "linear-gradient(to right, #ff5f6d, #ffc371)" : "linear-gradient(to right, #00b09b, #96c93d)",
+    }).showToast();
+}
+
+function renderizarLayoutPublico() {
+    const secoes = {
+        esq: document.getElementById('col-esq'),
+        cen: document.getElementById('col-cen'),
+        dir: document.getElementById('col-dir')
+    };
+    Object.values(secoes).forEach(sec => sec.innerHTML = '');
+
+    if (!layoutMesasGlobal) {
+        loadingOverlay.style.display = 'none';
+        return;
+    }
 
     for (const colId in layoutMesasGlobal) {
-        const coluna = document.getElementById(colId);
-        if (!coluna) continue;
+        let secaoAlvo = null;
+        if (colId.startsWith('col-esq')) secaoAlvo = secoes.esq;
+        else if (colId.startsWith('col-cen')) secaoAlvo = secoes.cen;
+        else if (colId.startsWith('col-dir')) secaoAlvo = secoes.dir;
         
-        layoutMesasGlobal[colId].forEach(mesaNum => {
-            const mesaData = mesasData[mesaNum] || { status: 'livre', nome: '' };
-
-            const termoBusca = searchInput.value.toUpperCase().trim();
-            const correspondeBusca = termoBusca === '' || 
-                                    mesaNum.toString().includes(termoBusca) || 
-                                    (mesaData.nome && mesaData.nome.toUpperCase().includes(termoBusca));
-
-            if (correspondeBusca) {
-                mesasEncontradas++;
+        if (secaoAlvo) {
+            const colunaDiv = document.createElement('div');
+            colunaDiv.classList.add('coluna-mesas');
+            
+            const mesasArray = Array.isArray(layoutMesasGlobal[colId]) ? layoutMesasGlobal[colId] : [];
+            mesasArray.forEach(mesaNum => {
+                const mesaData = mesasDataGlobal[mesaNum] || { status: 'livre', nome: '' };
                 const mesaDiv = document.createElement('div');
                 mesaDiv.classList.add('mesa', mesaData.status);
                 mesaDiv.textContent = mesaNum.toString().padStart(2, '0');
                 mesaDiv.dataset.numero = mesaNum;
-                
+
                 if (mesaData.status !== 'livre' && mesaData.nome) {
-                    mesaDiv.setAttribute('data-tooltip', mesaData.nome);
-                } else {
-                    mesaDiv.removeAttribute('data-tooltip');
+                    mesaDiv.dataset.tooltip = mesaData.nome;
                 }
-                
-                coluna.appendChild(mesaDiv);
-            }
-        });
+                colunaDiv.appendChild(mesaDiv);
+            });
+            secaoAlvo.appendChild(colunaDiv);
+        }
     }
-    searchCountSpan.textContent = `Mesas encontradas: ${mesasEncontradas}`;
+    loadingOverlay.style.display = 'none';
 }
 
-function abrirFormulario(numero, mesaData) {
-    sideMenu.classList.remove('open'); 
-    mesaNumeroInput.value = numero;
+function abrirModalCadastro(mesaNum) {
+    const mesaData = mesasDataGlobal[mesaNum] || { status: 'livre', nome: '' };
+    modalNumeroMesa.textContent = mesaNum.toString().padStart(2, '0');
+    mesaNumeroInput.value = mesaNum;
     nomeCompletoInput.value = mesaData.nome;
     statusMesaSelect.value = mesaData.status;
-    nomeCompletoInput.classList.remove('input-erro');
-    nomeErroSpan.style.display = 'none';
-    if (mesaData.status === 'livre') {
-        liberarBtn.style.display = 'none';
-    } else {
-        liberarBtn.style.display = 'inline-block';
-    }
     cadastroForm.style.display = 'flex';
 }
 
-function fecharFormulario() {
-    cadastroForm.style.display = 'none';
-}
-
-function salvarMesa(status, nome) {
-    salvarBtn.textContent = 'Salvando...';
-    salvarBtn.disabled = true;
-    const numeroMesa = parseInt(mesaNumeroInput.value);
-    const updateData = { nome: nome, status: status };
-    set(child(mesasRef, numeroMesa.toString()), updateData)
-        .then(() => {
-            console.log("Mesa atualizada no Firebase com sucesso!");
-            fecharFormulario();
-        })
-        .catch(error => {
-            console.error("Erro ao atualizar mesa no Firebase:", error);
-            alert("Erro ao salvar. Verifique a conexão com o Firebase.");
-        })
-        .finally(() => {
-            salvarBtn.textContent = 'Salvar';
-            salvarBtn.disabled = false;
-        });
-}
-
-function liberarMesa() {
-    salvarMesa('livre', '');
-}
-
-function handleLogin() {
-    const email = loginEmailInput.value;
-    const senha = loginSenhaInput.value;
-    signInWithEmailAndPassword(auth, email, senha)
-        .then(() => {
-            console.log("Login realizado com sucesso!");
-            loginForm.style.display = 'none';
-            loginErroSpan.style.display = 'none';
-        })
-        .catch((error) => {
-            console.error("Erro de login:", error);
-            loginErroSpan.style.display = 'block';
-            loginForm.classList.add('alerta-erro');
-        });
-}
-
-function handleLogout() {
-    signOut(auth).then(() => {
-        console.log("Logout realizado com sucesso.");
-    }).catch((error) => {
-        console.error("Erro ao fazer logout:", error);
-    });
-}
-
-function setupEventListeners() {
-    document.querySelector('.layout-salão').addEventListener('click', (e) => {
-        const mesa = e.target.closest('.mesa');
-        if (mesa && isLoggedIn) {
-            const numeroMesa = parseInt(mesa.dataset.numero);
-            const mesaData = mesasDataGlobal[numeroMesa] || { status: 'livre', nome: '' };
-            abrirFormulario(numeroMesa, mesaData);
-        } else if (mesa && !isLoggedIn) {
-            loginForm.style.display = 'flex';
+document.addEventListener('DOMContentLoaded', () => {
+    layoutContainer.addEventListener('click', (e) => {
+        const mesaClicada = e.target.closest('.mesa');
+        if (mesaClicada) {
+            if (isSupervisorLoggedIn) {
+                abrirModalCadastro(mesaClicada.dataset.numero);
+            } else {
+                loginForm.style.display = 'flex';
+            }
         }
+    });
+
+    loginBtn.addEventListener('click', () => {
+        signInWithEmailAndPassword(auth, loginEmailInput.value, loginSenhaInput.value)
+            .then(() => {
+                loginForm.style.display = 'none';
+                loginErroSpan.style.display = 'none';
+                loginEmailInput.value = '';
+                loginSenhaInput.value = '';
+            })
+            .catch(() => loginErroSpan.style.display = 'block');
     });
 
     salvarBtn.addEventListener('click', () => {
-        if (nomeCompletoInput.value.trim() === '') {
+        const mesaNum = mesaNumeroInput.value;
+        const nome = nomeCompletoInput.value.trim();
+        const status = statusMesaSelect.value;
+
+        if (!nome && status !== 'livre') {
             nomeErroSpan.style.display = 'block';
-            nomeCompletoInput.classList.add('input-erro');
             return;
         }
         nomeErroSpan.style.display = 'none';
-        nomeCompletoInput.classList.remove('input-erro');
-        salvarMesa(statusMesaSelect.value, nomeCompletoInput.value);
+
+        const mesaDataParaSalvar = {
+            nome: status === 'livre' ? '' : nome,
+            status: status
+        };
+
+        update(ref(database, 'mesas/' + mesaNum), mesaDataParaSalvar)
+            .then(() => {
+                cadastroForm.style.display = 'none';
+                showToast("Mesa atualizada com sucesso!");
+            })
+            .catch((error) => showToast("Erro ao salvar: " + error.message, true));
     });
 
-    cancelarBtn.addEventListener('click', fecharFormulario);
-    nomeCompletoInput.addEventListener('input', (e) => e.target.value = e.target.value.toUpperCase());
-    liberarBtn.addEventListener('click', liberarMesa);
-    loginBtn.addEventListener('click', handleLogin);
-    logoutBtn.addEventListener('click', handleLogout);
-    searchInput.addEventListener('input', () => renderizarMesas(mesasDataGlobal));
-    
-    menuBtn.addEventListener('click', () => sideMenu.classList.add('open'));
-    closeMenuBtn.addEventListener('click', () => sideMenu.classList.remove('open'));
-}
+    liberarBtn.addEventListener('click', () => {
+        const mesaNum = mesaNumeroInput.value;
+        set(ref(database, 'mesas/' + mesaNum), { nome: '', status: 'livre' })
+            .then(() => {
+                cadastroForm.style.display = 'none';
+                showToast(`Mesa ${mesaNum} liberada!`);
+            });
+    });
 
-document.addEventListener('DOMContentLoaded', () => {
-    setupEventListeners();
+    cancelarBtn.addEventListener('click', () => cadastroForm.style.display = 'none');
+    cancelarLoginBtn.addEventListener('click', () => loginForm.style.display = 'none');
+    logoutBtn.addEventListener('click', () => signOut(auth));
+
     onAuthStateChanged(auth, (user) => {
+        isSupervisorLoggedIn = !!user;
         if (user) {
-            isLoggedIn = true;
             statusText.textContent = `Logado como: ${user.email}`;
             logoutBtn.style.display = 'inline-block';
         } else {
-            isLoggedIn = false;
-            statusText.textContent = 'Faça login para gerenciar as mesas.';
+            statusText.textContent = 'Clique em uma mesa para gerenciar ou fazer login.';
             logoutBtn.style.display = 'none';
         }
     });
 
     onValue(layoutRef, (snapshot) => {
-        const layoutData = snapshot.val();
-        if (layoutData) {
-            layoutMesasGlobal = layoutData;
-            onValue(mesasRef, (mesasSnapshot) => {
-                mesasDataGlobal = mesasSnapshot.val();
-                if (mesasDataGlobal) {
-                    renderizarMesas(mesasDataGlobal);
-                } else {
-                    console.log("Banco de dados de mesas vazio. Inicializando...");
-                    const mesasIniciais = {};
-                    for (const colId in layoutMesasGlobal) {
-                        layoutMesasGlobal[colId].forEach(mesaNum => {
-                            mesasIniciais[mesaNum] = { status: 'livre', nome: '' };
-                        });
-                    }
-                    set(mesasRef, mesasIniciais);
-                }
-            });
-        } else {
-            console.warn("Nenhum layout encontrado no Firebase. Por favor, configure-o no Painel de Admin.");
-            document.querySelector('.layout-salão').innerHTML = '<h2>Nenhum layout encontrado. Por favor, acesse o <a href="admin.html">Painel de Admin</a> para configurar o layout inicial.</h2>';
-        }
+        layoutMesasGlobal = snapshot.val() || {};
+        onValue(mesasRef, (mesasSnapshot) => {
+            mesasDataGlobal = mesasSnapshot.val() || {};
+            renderizarLayoutPublico();
+        });
     });
 });
