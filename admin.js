@@ -50,8 +50,6 @@ function carregarLayout() {
         const layoutData = snapshot.val();
         if (layoutData) {
             layoutJsonTextArea.value = JSON.stringify(layoutData, null, 2);
-        } else {
-            layoutJsonTextArea.value = JSON.stringify({}, null, 2);
         }
     });
 }
