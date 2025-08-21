@@ -18,7 +18,18 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .admin-link { position: absolute; top: 20px; right: 20px; text-decoration: none; font-weight: bold; color: #007bff; padding: 10px 15px; border: 1px solid #007bff; border-radius: 5px; transition: background-color 0.2s, color 0.2s; z-index: 100; }
         .admin-link:hover { background-color: #007bff; color: white; }
-        #auth-status { margin-bottom: 20px; }
+        #auth-status { margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        #login-link-btn, #logout-btn {
+            background: none;
+            border: 1px solid #007bff;
+            color: #007bff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        #login-link-btn:hover, #logout-btn:hover { background-color: #007bff; color: white; }
+
         .search-filter-container, .export-container { width: 100%; max-width: 800px; padding: 20px; margin-bottom: 10px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 15px; align-items: center; box-sizing: border-box; }
         .export-container { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 15px; }
         .export-container label { font-weight: bold; }
@@ -96,9 +107,9 @@
             border: none;
             font-size: 1.1em;
             cursor: pointer;
-            margin-top: auto; /* Empurra o botão para o final do painel */
+            margin-top: auto;
             font-weight: bold;
-            display: none; /* Escondido por padrão */
+            display: none;
         }
         #manage-table-btn:hover { background-color: #0056b3; }
     </style>
@@ -116,7 +127,8 @@
     <a href="admin.html" class="admin-link">Painel de Admin</a>
 
     <div id="auth-status">
-        <span id="status-text"></span> <button id="logout-btn" style="display: none;">Sair</button>
+        <span id="status-text"></span>
+        <button id="login-link-btn" style="display: none;">Login Supervisor</button> <button id="logout-btn" style="display: none;">Sair</button>
     </div>
 
     <div class="search-filter-container">
@@ -266,6 +278,7 @@
             const layoutContainer = document.querySelector('.scroll-container');
             const statusText = document.getElementById('status-text');
             const logoutBtn = document.getElementById('logout-btn');
+            const loginLinkBtn = document.getElementById('login-link-btn'); // NOVO BOTÃO
             const loadingOverlay = document.getElementById('loading-overlay');
             const eventTitle = document.getElementById('event-title');
             const eventDate = document.getElementById('event-date');
@@ -302,7 +315,6 @@
             const exportPdfBtn = document.getElementById('export-pdf-btn');
             const exportFilter = document.getElementById('export-filter');
             
-            // Elementos do Painel de Informações
             const infoPanel = document.getElementById('info-panel');
             const infoPanelCloseBtn = document.getElementById('info-panel-close-btn');
             const infoPanelNumero = document.getElementById('info-panel-numero');
@@ -313,7 +325,7 @@
             const infoPanelContato = document.getElementById('info-panel-contato');
             const infoPanelEmail = document.getElementById('info-panel-email');
             const infoPanelPagamento = document.getElementById('info-panel-pagamento');
-            const manageTableBtn = document.getElementById('manage-table-btn'); // Botão Gerenciar
+            const manageTableBtn = document.getElementById('manage-table-btn');
 
 
             function showToast(text, isError = false) { Toastify({ text: text, duration: 3000, gravity: "top", position: "right", backgroundColor: isError ? "linear-gradient(to right, #ff5f6d, #ffc371)" : "linear-gradient(to right, #00b09b, #96c93d)", }).showToast(); }
@@ -387,7 +399,7 @@
 
             function showInfoPanel(mesaNum) {
                 const mesaData = mesasDataGlobal[mesaNum] || { status: 'livre' };
-                infoPanel.dataset.currentTable = mesaNum; // Armazena o número da mesa
+                infoPanel.dataset.currentTable = mesaNum;
                 
                 infoPanelNumero.textContent = mesaNum.toString().padStart(2, '0');
                 infoPanelStatus.textContent = mesaData.status.charAt(0).toUpperCase() + mesaData.status.slice(1);
@@ -395,14 +407,14 @@
 
                 if (isSupervisorLoggedIn) {
                     infoPanelDadosRestritos.style.display = 'block';
-                    manageTableBtn.style.display = 'block'; // Mostra o botão Gerenciar
+                    manageTableBtn.style.display = 'block';
                     infoPanelPreco.textContent = `R$ ${(parseFloat(mesaData.preco) || 0).toFixed(2)}`;
                     infoPanelContato.textContent = mesaData.contato || '---';
                     infoPanelEmail.textContent = mesaData.email || '---';
                     infoPanelPagamento.textContent = (mesaData.status === 'vendida') ? (mesaData.pago ? 'Confirmado' : 'Pendente') : 'N/A';
                 } else {
                     infoPanelDadosRestritos.style.display = 'none';
-                    manageTableBtn.style.display = 'none'; // Esconde o botão Gerenciar
+                    manageTableBtn.style.display = 'none';
                 }
 
                 infoPanel.classList.add('visible');
@@ -420,24 +432,22 @@
             layoutContainer.addEventListener('click', (e) => {
                 const mesaClicada = e.target.closest('.mesa');
                 if (!mesaClicada) return;
-
                 const mesaNum = mesaClicada.dataset.numero;
                 const mesaData = mesasDataGlobal[mesaNum] || { status: 'livre' };
 
-                if (mesaData.status === 'vendida' || mesaData.status === 'reservada') {
-                    showInfoPanel(mesaNum);
-                } else if (mesaData.status === 'livre') {
+                if (mesaData.status === 'livre') {
                     if (isSupervisorLoggedIn) {
                         abrirModalCadastro(mesaNum);
                     } else {
                         loginForm.style.display = 'flex';
                     }
+                } else {
+                    showInfoPanel(mesaNum);
                 }
             });
             
             infoPanelCloseBtn.addEventListener('click', () => { infoPanel.classList.remove('visible'); });
             
-            // Evento para o novo botão Gerenciar Mesa
             manageTableBtn.addEventListener('click', () => {
                 const mesaNum = infoPanel.dataset.currentTable;
                 if (mesaNum) {
@@ -446,6 +456,7 @@
                 }
             });
 
+            loginLinkBtn.addEventListener('click', () => { loginForm.style.display = 'flex'; }); // AÇÃO DO NOVO BOTÃO
 
             loginBtn.addEventListener('click', () => { signInWithEmailAndPassword(auth, loginEmailInput.value, loginSenhaInput.value).then(() => { loginForm.style.display = 'none'; loginErroSpan.style.display = 'none'; loginEmailInput.value = ''; loginSenhaInput.value = ''; }).catch(() => loginErroSpan.style.display = 'block'); });
             salvarBtn.addEventListener('click', () => {
@@ -496,11 +507,13 @@
                 if (user) {
                     statusText.textContent = `Logado como: ${user.email}`;
                     logoutBtn.style.display = 'inline-block';
+                    loginLinkBtn.style.display = 'none'; // Esconde o botão de login
                     exportContainer.style.display = 'flex';
                     statArrecadado.style.display = 'inline-block';
                 } else {
-                    statusText.textContent = 'Clique em uma mesa para ver os detalhes ou em uma mesa livre para fazer login.';
+                    statusText.textContent = 'Clique em uma mesa para ver os detalhes.';
                     logoutBtn.style.display = 'none';
+                    loginLinkBtn.style.display = 'inline-block'; // Mostra o botão de login
                     exportContainer.style.display = 'none';
                     statArrecadado.style.display = 'none';
                 }
