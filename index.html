@@ -42,6 +42,18 @@
         <span class="stat-item reservada">Reservadas: <strong id="reservada-count">0</strong></span>
         <span class="stat-item vendida">Vendidas: <strong id="vendida-count">0</strong></span>
     </div>
+    
+    <div id="export-container" class="export-container" style="display: none;">
+        <label for="export-filter">Exportar Relatório:</label>
+        <select id="export-filter">
+            <option value="ocupadas">Vendidas e Reservadas</option>
+            <option value="vendida">Apenas Vendidas</option>
+            <option value="reservada">Apenas Reservadas</option>
+            <option value="livre">Apenas Livres</option>
+        </select>
+        <button id="export-csv-btn">Gerar CSV</button>
+        <button id="export-pdf-btn">Gerar PDF</button>
+    </div>
 
     <div class="legenda">
         <div class="legenda-item">
@@ -90,8 +102,11 @@
         <label for="preco-mesa">Preço (R$):</label>
         <input type="number" id="preco-mesa" placeholder="Ex: 150.00" step="0.01" min="0">
         
-        <label for="lugares-mesa">Nº de Lugares:</label>
-        <input type="number" id="lugares-mesa" placeholder="Ex: 4" min="0">
+        <label for="contato-mesa">Nº de Contato:</label>
+        <input type="tel" id="contato-mesa" placeholder="(99) 99999-9999">
+
+        <label for="email-mesa">E-mail:</label>
+        <input type="email" id="email-mesa" placeholder="exemplo@email.com">
         
         <label for="status-mesa">Status:</label>
         <select id="status-mesa">
@@ -108,6 +123,11 @@
     </div>
 
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="https://unpkg.com/imask"></script>
+    <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/jspdf-autotable@3.5.23/dist/jspdf.plugin.autotable.js"></script>
+    
     <script src="script.js" type="module"></script>
+
 </body>
 </html>

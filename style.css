@@ -82,14 +82,14 @@ h1 {
     color: white;
 }
 
-#auth-status {
+#auth-status, #auth-status-admin {
     margin-bottom: 20px;
 }
 
 /* =================================
-   BUSCA E FILTRO
+   BUSCA, FILTRO E EXPORTAÇÃO
    ================================= */
-.search-filter-container {
+.search-filter-container, .export-container {
     width: 100%;
     max-width: 800px;
     padding: 20px;
@@ -101,9 +101,22 @@ h1 {
     flex-direction: column;
     gap: 15px;
     align-items: center;
+    box-sizing: border-box;
 }
 
-#search-input {
+.export-container {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px;
+}
+
+.export-container label {
+    font-weight: bold;
+}
+
+#search-input, .export-container select {
     width: 100%;
     max-width: 400px;
     padding: 12px;
@@ -113,6 +126,12 @@ h1 {
     box-sizing: border-box;
 }
 
+.export-container select {
+    max-width: 250px;
+    padding: 8px;
+    font-size: 0.9em;
+}
+
 .filter-buttons {
     display: flex;
     gap: 10px;
@@ -120,7 +139,7 @@ h1 {
     justify-content: center;
 }
 
-.filter-btn {
+.filter-btn, .export-container button {
     padding: 8px 16px;
     font-size: 0.9em;
     border: 1px solid #ccc;
@@ -129,9 +148,10 @@ h1 {
     color: #333;
     cursor: pointer;
     transition: background-color 0.2s, color 0.2s;
+    font-weight: bold;
 }
 
-.filter-btn:hover {
+.filter-btn:hover, .export-container button:hover {
     background-color: #e2e6ea;
 }
 
@@ -139,7 +159,6 @@ h1 {
     background-color: #007bff;
     color: white;
     border-color: #007bff;
-    font-weight: bold;
 }
 
 /* =================================
@@ -172,18 +191,9 @@ h1 {
     font-size: 1.2em;
 }
 
-.stat-item.livre {
-    background-color: #28a745;
-    color: white;
-}
-.stat-item.reservada {
-    background-color: #ffc107;
-    color: #333;
-}
-.stat-item.vendida {
-    background-color: #dc3545;
-    color: white;
-}
+.stat-item.livre { background-color: #28a745; color: white; }
+.stat-item.reservada { background-color: #ffc107; color: #333; }
+.stat-item.vendida { background-color: #dc3545; color: white; }
 
 /* =================================
    LAYOUT PÚBLICO (index.html)
@@ -265,7 +275,6 @@ h1 {
     line-height: 1.4;
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
 }
-
 
 .legenda {
     display: flex;
@@ -391,7 +400,6 @@ h1 {
     flex-grow: 1;
 }
 
-
 .layout-salão-admin {
     width: 100%;
     overflow-x: auto;
@@ -433,7 +441,7 @@ h1 {
 }
 
 .coluna-admin .mesa {
-    background-color: #6c757d; /* Cor neutra para as mesas no admin */
+    background-color: #6c757d;
     cursor: move;
 }
 
@@ -445,7 +453,6 @@ h1 {
     justify-content: center;
 }
 
-/* --- Estilos para Drag & Drop e Modo Excluir --- */
 .sortable-drag { opacity: 0.5; }
 .sortable-ghost { background-color: #c9e2ff; border: 2px dashed #007bff; }
 
