@@ -68,7 +68,7 @@
         .info-panel {
             position: fixed;
             top: 0;
-            right: -100%; /* Começa fora da tela */
+            right: -100%;
             width: 320px;
             height: 100%;
             background-color: #fff;
@@ -81,46 +81,26 @@
             display: flex;
             flex-direction: column;
         }
-        .info-panel.visible {
-            right: 0; /* Desliza para a tela */
-        }
-        .info-panel h3 {
-            margin-top: 0;
-            color: #007bff;
-            border-bottom: 2px solid #f0f2f5;
-            padding-bottom: 10px;
-        }
-        .info-panel p {
-            margin: 12px 0;
-            line-height: 1.6;
-            font-size: 1.1em;
-            color: #555;
-        }
-        .info-panel p strong {
-            display: inline-block;
-            width: 90px;
-            color: #333;
-        }
-        .info-panel .close-btn {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            font-size: 2em;
-            font-weight: bold;
-            background: none;
+        .info-panel.visible { right: 0; }
+        .info-panel h3 { margin-top: 0; color: #007bff; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; }
+        .info-panel p { margin: 12px 0; line-height: 1.6; font-size: 1.1em; color: #555; }
+        .info-panel p strong { display: inline-block; width: 90px; color: #333; }
+        .info-panel .close-btn { position: absolute; top: 15px; right: 20px; font-size: 2em; font-weight: bold; background: none; border: none; cursor: pointer; color: #aaa; line-height: 1; }
+        .info-panel .close-btn:hover { color: #333; }
+        #info-panel-dados-restritos { border-top: 2px solid #f0f2f5; margin-top: 15px; padding-top: 10px; }
+        #manage-table-btn {
+            background-color: #007bff;
+            color: white;
+            padding: 12px;
+            border-radius: 5px;
             border: none;
+            font-size: 1.1em;
             cursor: pointer;
-            color: #aaa;
-            line-height: 1;
+            margin-top: auto; /* Empurra o botão para o final do painel */
+            font-weight: bold;
+            display: none; /* Escondido por padrão */
         }
-        .info-panel .close-btn:hover {
-            color: #333;
-        }
-        #info-panel-dados-restritos {
-            border-top: 2px solid #f0f2f5;
-            margin-top: 15px;
-            padding-top: 10px;
-        }
+        #manage-table-btn:hover { background-color: #0056b3; }
     </style>
 </head>
 <body>
@@ -136,8 +116,7 @@
     <a href="admin.html" class="admin-link">Painel de Admin</a>
 
     <div id="auth-status">
-        <span id="status-text">Faça login para gerenciar as mesas.</span>
-        <button id="logout-btn" style="display: none;">Sair</button>
+        <span id="status-text"></span> <button id="logout-btn" style="display: none;">Sair</button>
     </div>
 
     <div class="search-filter-container">
@@ -204,6 +183,7 @@
             <p><strong>Email:</strong> <span id="info-panel-email"></span></p>
             <p><strong>Pagamento:</strong> <span id="info-panel-pagamento"></span></p>
         </div>
+        <button id="manage-table-btn">Gerenciar Mesa</button>
     </div>
 
     <div id="login-form" class="modal">
@@ -333,6 +313,7 @@
             const infoPanelContato = document.getElementById('info-panel-contato');
             const infoPanelEmail = document.getElementById('info-panel-email');
             const infoPanelPagamento = document.getElementById('info-panel-pagamento');
+            const manageTableBtn = document.getElementById('manage-table-btn'); // Botão Gerenciar
 
 
             function showToast(text, isError = false) { Toastify({ text: text, duration: 3000, gravity: "top", position: "right", backgroundColor: isError ? "linear-gradient(to right, #ff5f6d, #ffc371)" : "linear-gradient(to right, #00b09b, #96c93d)", }).showToast(); }
@@ -404,27 +385,24 @@
                 return filteredData.sort((a, b) => a.numero - b.numero);
             }
 
-            // Função para mostrar o painel lateral com informações
             function showInfoPanel(mesaNum) {
                 const mesaData = mesasDataGlobal[mesaNum] || { status: 'livre' };
+                infoPanel.dataset.currentTable = mesaNum; // Armazena o número da mesa
                 
                 infoPanelNumero.textContent = mesaNum.toString().padStart(2, '0');
                 infoPanelStatus.textContent = mesaData.status.charAt(0).toUpperCase() + mesaData.status.slice(1);
                 infoPanelNome.textContent = (mesaData.nome && mesaData.nome.toUpperCase()) || '---';
 
-                // Lógica para mostrar/ocultar dados com base no login
                 if (isSupervisorLoggedIn) {
+                    infoPanelDadosRestritos.style.display = 'block';
+                    manageTableBtn.style.display = 'block'; // Mostra o botão Gerenciar
                     infoPanelPreco.textContent = `R$ ${(parseFloat(mesaData.preco) || 0).toFixed(2)}`;
                     infoPanelContato.textContent = mesaData.contato || '---';
                     infoPanelEmail.textContent = mesaData.email || '---';
-                    if (mesaData.status === 'vendida') {
-                        infoPanelPagamento.textContent = mesaData.pago ? 'Confirmado' : 'Pendente';
-                    } else {
-                        infoPanelPagamento.textContent = 'N/A';
-                    }
-                    infoPanelDadosRestritos.style.display = 'block';
+                    infoPanelPagamento.textContent = (mesaData.status === 'vendida') ? (mesaData.pago ? 'Confirmado' : 'Pendente') : 'N/A';
                 } else {
                     infoPanelDadosRestritos.style.display = 'none';
+                    manageTableBtn.style.display = 'none'; // Esconde o botão Gerenciar
                 }
 
                 infoPanel.classList.add('visible');
@@ -439,7 +417,6 @@
             searchInput.addEventListener('input', (e) => { searchTerm = e.target.value; renderizarLayoutPublico(); });
             filterButtonsContainer.addEventListener('click', (e) => { const target = e.target.closest('.filter-btn'); if (target) { filterButtonsContainer.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active')); target.classList.add('active'); filterStatus = target.dataset.status; renderizarLayoutPublico(); } });
             
-            // Lógica de Clique Inteligente (CORRIGIDA)
             layoutContainer.addEventListener('click', (e) => {
                 const mesaClicada = e.target.closest('.mesa');
                 if (!mesaClicada) return;
@@ -448,23 +425,25 @@
                 const mesaData = mesasDataGlobal[mesaNum] || { status: 'livre' };
 
                 if (mesaData.status === 'vendida' || mesaData.status === 'reservada') {
-                    // Se a mesa está ocupada, mostra o painel de informações
                     showInfoPanel(mesaNum);
                 } else if (mesaData.status === 'livre') {
-                    // Se a mesa está livre, verifica o login
                     if (isSupervisorLoggedIn) {
-                        // Se logado, abre o modal de gestão
                         abrirModalCadastro(mesaNum);
                     } else {
-                        // Se NÃO estiver logado, abre o modal de LOGIN
                         loginForm.style.display = 'flex';
                     }
                 }
             });
             
-            // Evento para fechar o painel de informações
-            infoPanelCloseBtn.addEventListener('click', () => {
-                infoPanel.classList.remove('visible');
+            infoPanelCloseBtn.addEventListener('click', () => { infoPanel.classList.remove('visible'); });
+            
+            // Evento para o novo botão Gerenciar Mesa
+            manageTableBtn.addEventListener('click', () => {
+                const mesaNum = infoPanel.dataset.currentTable;
+                if (mesaNum) {
+                    infoPanel.classList.remove('visible');
+                    abrirModalCadastro(mesaNum);
+                }
             });
 
 
@@ -483,15 +462,9 @@
                 update(ref(database, 'mesas/' + mesaNum), mesaDataParaSalvar).then(() => { cadastroForm.style.display = 'none'; showToast("Mesa atualizada com sucesso!"); }).catch((error) => showToast("Erro ao salvar: " + error.message, true));
             });
             liberarBtn.addEventListener('click', () => { const mesaNum = mesaNumeroInput.value; update(ref(database, 'mesas/' + mesaNum), { nome: '', status: 'livre', contato: '', email: '', pago: false }).then(() => { cadastroForm.style.display = 'none'; showToast(`Mesa ${mesaNum} liberada!`); }); });
-            cancelarBtn.addEventListener('click', () => {
-                cadastroForm.style.display = 'none';
-                infoPanel.classList.remove('visible');
-});
+            cancelarBtn.addEventListener('click', () => { cadastroForm.style.display = 'none'; infoPanel.classList.remove('visible'); });
             cancelarLoginBtn.addEventListener('click', () => loginForm.style.display = 'none');
-            logoutBtn.addEventListener('click', () => {
-                signOut(auth);
-                infoPanel.classList.remove('visible');
-            });
+            logoutBtn.addEventListener('click', () => { signOut(auth); infoPanel.classList.remove('visible'); });
             exportCsvBtn.addEventListener('click', () => {
                 const filterValue = exportFilter.value; const data = getExportData(filterValue); if (data.length === 0) { showToast("Nenhuma mesa encontrada para exportar com este filtro.", true); return; }
                 let csvContent = "Numero da Mesa,Nome Completo,Contato,E-mail,Status\n";
@@ -517,6 +490,7 @@
                 eventTitle.textContent = nomeEvento; document.title = `AABB ARACAJU - ${nomeEvento}`;
                 if (data && data.data) { const [ano, mes, dia] = data.data.split('-'); eventDate.textContent = `${dia}/${mes}/${ano}`; } else { eventDate.textContent = ''; }
             });
+
             onAuthStateChanged(auth, (user) => {
                 isSupervisorLoggedIn = !!user;
                 if (user) {
@@ -525,12 +499,13 @@
                     exportContainer.style.display = 'flex';
                     statArrecadado.style.display = 'inline-block';
                 } else {
-                    statusText.textContent = 'Clique em uma mesa para gerenciar ou ver detalhes.';
+                    statusText.textContent = 'Clique em uma mesa para ver os detalhes ou em uma mesa livre para fazer login.';
                     logoutBtn.style.display = 'none';
                     exportContainer.style.display = 'none';
                     statArrecadado.style.display = 'none';
                 }
             });
+
             onValue(layoutRef, (snapshot) => {
                 layoutMesasGlobal = snapshot.val() || {};
                 onValue(mesasRef, (mesasSnapshot) => {
