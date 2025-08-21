@@ -45,7 +45,6 @@
         .mesa.livre { background-color: #28a745; }
         .mesa.reservada { background-color: #ffc107; }
         .mesa.vendida { background-color: #dc3545; }
-        .dynamic-tooltip { position: fixed; display: none; background-color: #333; color: white; padding: 10px 15px; border-radius: 5px; font-size: 1em; z-index: 10001; pointer-events: none; text-align: left; line-height: 1.4; box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3); white-space: nowrap; }
         .legenda { display: flex; justify-content: center; gap: 20px; margin-top: 10px; margin-bottom: 20px; flex-wrap: wrap; }
         .legenda-item { display: flex; align-items: center; gap: 8px; }
         .legenda-cor { width: 20px; height: 20px; border-radius: 4px; }
@@ -64,6 +63,64 @@
         .voltar-btn { background-color: #6c757d !important; }
         .voltar-btn:hover { background-color: #545b62 !important; }
         .mensagem-erro { color: #dc3545; font-size: 0.9em; display: none; align-self: flex-start; text-align: left; width: 100%; }
+        
+        /* Estilos para o Painel de Informações Lateral */
+        .info-panel {
+            position: fixed;
+            top: 0;
+            right: -100%; /* Começa fora da tela */
+            width: 320px;
+            height: 100%;
+            background-color: #fff;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.15);
+            padding: 25px;
+            box-sizing: border-box;
+            transition: right 0.4s ease-in-out;
+            z-index: 9998;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+        }
+        .info-panel.visible {
+            right: 0; /* Desliza para a tela */
+        }
+        .info-panel h3 {
+            margin-top: 0;
+            color: #007bff;
+            border-bottom: 2px solid #f0f2f5;
+            padding-bottom: 10px;
+        }
+        .info-panel p {
+            margin: 12px 0;
+            line-height: 1.6;
+            font-size: 1.1em;
+            color: #555;
+        }
+        .info-panel p strong {
+            display: inline-block;
+            width: 90px;
+            color: #333;
+        }
+        .info-panel .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 2em;
+            font-weight: bold;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #aaa;
+            line-height: 1;
+        }
+        .info-panel .close-btn:hover {
+            color: #333;
+        }
+        #info-panel-dados-restritos {
+            border-top: 2px solid #f0f2f5;
+            margin-top: 15px;
+            padding-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -136,6 +193,19 @@
         </div>
     </div>
 
+    <div id="info-panel" class="info-panel">
+        <button id="info-panel-close-btn" class="close-btn">&times;</button>
+        <h3>Detalhes da Mesa <span id="info-panel-numero"></span></h3>
+        <p><strong>Status:</strong> <span id="info-panel-status"></span></p>
+        <p><strong>Nome:</strong> <span id="info-panel-nome"></span></p>
+        <div id="info-panel-dados-restritos">
+            <p><strong>Preço:</strong> <span id="info-panel-preco"></span></p>
+            <p><strong>Contato:</strong> <span id="info-panel-contato"></span></p>
+            <p><strong>Email:</strong> <span id="info-panel-email"></span></p>
+            <p><strong>Pagamento:</strong> <span id="info-panel-pagamento"></span></p>
+        </div>
+    </div>
+
     <div id="login-form" class="modal">
         <h2>Login do Supervisor</h2>
         <label for="login-email">E-mail:</label>
@@ -178,8 +248,6 @@
         </div>
     </div>
     
-    <div id="dynamic-tooltip" class="dynamic-tooltip"></div>
-
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script src="https://unpkg.com/imask"></script>
     <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
@@ -253,7 +321,19 @@
             const exportCsvBtn = document.getElementById('export-csv-btn');
             const exportPdfBtn = document.getElementById('export-pdf-btn');
             const exportFilter = document.getElementById('export-filter');
-            const dynamicTooltip = document.getElementById('dynamic-tooltip');
+            
+            // Elementos do Painel de Informações
+            const infoPanel = document.getElementById('info-panel');
+            const infoPanelCloseBtn = document.getElementById('info-panel-close-btn');
+            const infoPanelNumero = document.getElementById('info-panel-numero');
+            const infoPanelStatus = document.getElementById('info-panel-status');
+            const infoPanelNome = document.getElementById('info-panel-nome');
+            const infoPanelDadosRestritos = document.getElementById('info-panel-dados-restritos');
+            const infoPanelPreco = document.getElementById('info-panel-preco');
+            const infoPanelContato = document.getElementById('info-panel-contato');
+            const infoPanelEmail = document.getElementById('info-panel-email');
+            const infoPanelPagamento = document.getElementById('info-panel-pagamento');
+
 
             function showToast(text, isError = false) { Toastify({ text: text, duration: 3000, gravity: "top", position: "right", backgroundColor: isError ? "linear-gradient(to right, #ff5f6d, #ffc371)" : "linear-gradient(to right, #00b09b, #96c93d)", }).showToast(); }
             function updateStats() {
@@ -324,6 +404,32 @@
                 return filteredData.sort((a, b) => a.numero - b.numero);
             }
 
+            // Função para mostrar o painel lateral com informações
+            function showInfoPanel(mesaNum) {
+                const mesaData = mesasDataGlobal[mesaNum] || { status: 'livre' };
+                
+                infoPanelNumero.textContent = mesaNum.toString().padStart(2, '0');
+                infoPanelStatus.textContent = mesaData.status.charAt(0).toUpperCase() + mesaData.status.slice(1);
+                infoPanelNome.textContent = (mesaData.nome && mesaData.nome.toUpperCase()) || '---';
+
+                // Lógica para mostrar/ocultar dados com base no login
+                if (isSupervisorLoggedIn) {
+                    infoPanelPreco.textContent = `R$ ${(parseFloat(mesaData.preco) || 0).toFixed(2)}`;
+                    infoPanelContato.textContent = mesaData.contato || '---';
+                    infoPanelEmail.textContent = mesaData.email || '---';
+                    if (mesaData.status === 'vendida') {
+                        infoPanelPagamento.textContent = mesaData.pago ? 'Confirmado' : 'Pendente';
+                    } else {
+                        infoPanelPagamento.textContent = 'N/A';
+                    }
+                    infoPanelDadosRestritos.style.display = 'block';
+                } else {
+                    infoPanelDadosRestritos.style.display = 'none';
+                }
+
+                infoPanel.classList.add('visible');
+            }
+
             const phoneMask = IMask(contatoMesaInput, { mask: '(00) 00000-0000' });
             nomeCompletoInput.addEventListener('input', () => { nomeCompletoInput.value = nomeCompletoInput.value.toUpperCase(); });
             statusMesaSelect.addEventListener('change', () => {
@@ -332,10 +438,36 @@
             });
             searchInput.addEventListener('input', (e) => { searchTerm = e.target.value; renderizarLayoutPublico(); });
             filterButtonsContainer.addEventListener('click', (e) => { const target = e.target.closest('.filter-btn'); if (target) { filterButtonsContainer.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active')); target.classList.add('active'); filterStatus = target.dataset.status; renderizarLayoutPublico(); } });
-            layoutContainer.addEventListener('click', (e) => { const mesaClicada = e.target.closest('.mesa'); if (mesaClicada) { if (isSupervisorLoggedIn) { abrirModalCadastro(mesaClicada.dataset.numero); } else { loginForm.style.display = 'flex'; } } });
-            layoutContainer.addEventListener('mouseover', (e) => { const mesa = e.target.closest('.mesa'); if (!mesa) return; const mesaNum = mesa.dataset.numero; const mesaData = mesasDataGlobal[mesaNum]; if (mesaData && mesaData.status !== 'livre' && mesaData.nome) { dynamicTooltip.innerHTML = mesaData.nome.toUpperCase(); dynamicTooltip.style.display = 'block'; } });
-            layoutContainer.addEventListener('mouseout', () => { dynamicTooltip.style.display = 'none'; });
-            layoutContainer.addEventListener('mousemove', (e) => { dynamicTooltip.style.left = (e.pageX + 15) + 'px'; dynamicTooltip.style.top = (e.pageY + 15) + 'px'; });
+            
+            // Lógica de Clique Inteligente (CORRIGIDA)
+            layoutContainer.addEventListener('click', (e) => {
+                const mesaClicada = e.target.closest('.mesa');
+                if (!mesaClicada) return;
+
+                const mesaNum = mesaClicada.dataset.numero;
+                const mesaData = mesasDataGlobal[mesaNum] || { status: 'livre' };
+
+                if (mesaData.status === 'vendida' || mesaData.status === 'reservada') {
+                    // Se a mesa está ocupada, mostra o painel de informações
+                    showInfoPanel(mesaNum);
+                } else if (mesaData.status === 'livre') {
+                    // Se a mesa está livre, verifica o login
+                    if (isSupervisorLoggedIn) {
+                        // Se logado, abre o modal de gestão
+                        abrirModalCadastro(mesaNum);
+                    } else {
+                        // Se NÃO estiver logado, abre o modal de LOGIN
+                        loginForm.style.display = 'flex';
+                    }
+                }
+            });
+            
+            // Evento para fechar o painel de informações
+            infoPanelCloseBtn.addEventListener('click', () => {
+                infoPanel.classList.remove('visible');
+            });
+
+
             loginBtn.addEventListener('click', () => { signInWithEmailAndPassword(auth, loginEmailInput.value, loginSenhaInput.value).then(() => { loginForm.style.display = 'none'; loginErroSpan.style.display = 'none'; loginEmailInput.value = ''; loginSenhaInput.value = ''; }).catch(() => loginErroSpan.style.display = 'block'); });
             salvarBtn.addEventListener('click', () => {
                 const mesaNum = mesaNumeroInput.value;
@@ -351,9 +483,15 @@
                 update(ref(database, 'mesas/' + mesaNum), mesaDataParaSalvar).then(() => { cadastroForm.style.display = 'none'; showToast("Mesa atualizada com sucesso!"); }).catch((error) => showToast("Erro ao salvar: " + error.message, true));
             });
             liberarBtn.addEventListener('click', () => { const mesaNum = mesaNumeroInput.value; update(ref(database, 'mesas/' + mesaNum), { nome: '', status: 'livre', contato: '', email: '', pago: false }).then(() => { cadastroForm.style.display = 'none'; showToast(`Mesa ${mesaNum} liberada!`); }); });
-            cancelarBtn.addEventListener('click', () => cadastroForm.style.display = 'none');
+            cancelarBtn.addEventListener('click', () => {
+                cadastroForm.style.display = 'none';
+                infoPanel.classList.remove('visible');
+});
             cancelarLoginBtn.addEventListener('click', () => loginForm.style.display = 'none');
-            logoutBtn.addEventListener('click', () => signOut(auth));
+            logoutBtn.addEventListener('click', () => {
+                signOut(auth);
+                infoPanel.classList.remove('visible');
+            });
             exportCsvBtn.addEventListener('click', () => {
                 const filterValue = exportFilter.value; const data = getExportData(filterValue); if (data.length === 0) { showToast("Nenhuma mesa encontrada para exportar com este filtro.", true); return; }
                 let csvContent = "Numero da Mesa,Nome Completo,Contato,E-mail,Status\n";
@@ -387,7 +525,7 @@
                     exportContainer.style.display = 'flex';
                     statArrecadado.style.display = 'inline-block';
                 } else {
-                    statusText.textContent = 'Clique em uma mesa para gerenciar ou fazer login.';
+                    statusText.textContent = 'Clique em uma mesa para gerenciar ou ver detalhes.';
                     logoutBtn.style.display = 'none';
                     exportContainer.style.display = 'none';
                     statArrecadado.style.display = 'none';
