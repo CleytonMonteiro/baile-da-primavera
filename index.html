@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
     <style>
+        /* CSS COMPLETO EMBUTIDO */
         body { font-family: Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; color: #333; display: flex; flex-direction: column; align-items: center; text-align: center; }
         h1 { color: #007bff; margin-bottom: 10px; }
         .event-date { font-size: 1.5em; font-weight: bold; color: #555; margin-top: -10px; margin-bottom: 20px; }
@@ -255,7 +256,6 @@
             const dynamicTooltip = document.getElementById('dynamic-tooltip');
 
             function showToast(text, isError = false) { Toastify({ text: text, duration: 3000, gravity: "top", position: "right", backgroundColor: isError ? "linear-gradient(to right, #ff5f6d, #ffc371)" : "linear-gradient(to right, #00b09b, #96c93d)", }).showToast(); }
-
             function updateStats() {
                 let countTotal = 0, countReservada = 0, countVendida = 0, totalArrecadado = 0;
                 if (layoutMesasGlobal) { for (const colId in layoutMesasGlobal) { countTotal += (layoutMesasGlobal[colId] || []).length; } }
@@ -272,11 +272,10 @@
                 vendidaCountSpan.textContent = countVendida;
                 arrecadadoTotalSpan.textContent = `R$ ${totalArrecadado.toFixed(2).replace('.', ',')}`;
             }
-
             function renderizarLayoutPublico() {
                 const secoes = { esq: document.getElementById('col-esq'), cen: document.getElementById('col-cen'), dir: document.getElementById('col-dir') };
-                Object.values(secoes).forEach(sec => sec.innerHTML = '');
-                if (!layoutMesasGlobal) { loadingOverlay.style.display = 'none'; return; }
+                Object.values(secoes).forEach(sec => { if(sec) sec.innerHTML = ''; });
+                if (!layoutMesasGlobal) { if(loadingOverlay) loadingOverlay.style.display = 'none'; return; }
                 updateStats();
                 for (const colId in layoutMesasGlobal) {
                     let secaoAlvo = null;
@@ -303,9 +302,8 @@
                         secaoAlvo.appendChild(colunaDiv);
                     }
                 }
-                loadingOverlay.style.display = 'none';
+                if(loadingOverlay) loadingOverlay.style.display = 'none';
             }
-
             function abrirModalCadastro(mesaNum) {
                 const mesaData = mesasDataGlobal[mesaNum] || { status: 'livre' };
                 modalNumeroMesa.textContent = mesaNum.toString().padStart(2, '0');
@@ -319,7 +317,6 @@
                 pagamentoContainer.style.display = (statusMesaSelect.value === 'vendida') ? 'flex' : 'none';
                 cadastroForm.style.display = 'flex';
             }
-
             function getExportData(filterValue) {
                 const allTablesData = [];
                 if (layoutMesasGlobal) { for (const colId in layoutMesasGlobal) { (layoutMesasGlobal[colId] || []).forEach(numeroMesa => { const data = mesasDataGlobal[numeroMesa] || { status: 'livre' }; allTablesData.push({ numero: parseInt(numeroMesa), nome: data.nome || '', contato: data.contato || '', email: data.email || '', status: data.status || 'livre' }); }); } }
@@ -357,8 +354,24 @@
             cancelarBtn.addEventListener('click', () => cadastroForm.style.display = 'none');
             cancelarLoginBtn.addEventListener('click', () => loginForm.style.display = 'none');
             logoutBtn.addEventListener('click', () => signOut(auth));
-            exportCsvBtn.addEventListener('click', () => { /* ...código de exportação... */ });
-            exportPdfBtn.addEventListener('click', () => { /* ...código de exportação... */ });
+            exportCsvBtn.addEventListener('click', () => {
+                const filterValue = exportFilter.value; const data = getExportData(filterValue); if (data.length === 0) { showToast("Nenhuma mesa encontrada para exportar com este filtro.", true); return; }
+                let csvContent = "Numero da Mesa,Nome Completo,Contato,E-mail,Status\n";
+                data.forEach(item => { csvContent += `${item.numero},"${item.nome}","${item.contato}","${item.email}","${item.status}"\n`; });
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a"); const url = URL.createObjectURL(blob); const fileName = `relatorio_mesas_${filterValue}.csv`;
+                link.setAttribute("href", url); link.setAttribute("download", fileName); link.style.visibility = 'hidden';
+                document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            });
+            exportPdfBtn.addEventListener('click', () => {
+                const filterValue = exportFilter.value; const data = getExportData(filterValue); if (data.length === 0) { showToast("Nenhuma mesa encontrada para exportar com este filtro.", true); return; }
+                const { jsPDF } = window.jspdf; const doc = new jsPDF();
+                const tableColumn = ["Nº", "Nome Completo", "Contato", "E-mail", "Status"]; const tableRows = [];
+                data.forEach(item => { tableRows.push([ item.numero, item.nome, item.contato, item.email, item.status ]); });
+                const filterText = exportFilter.options[exportFilter.selectedIndex].text;
+                doc.text(`Relatório de Mesas: ${filterText}`, 14, 15);
+                doc.autoTable(tableColumn, tableRows, { startY: 20 }); const fileName = `relatorio_mesas_${filterValue}.pdf`; doc.save(fileName);
+            });
             
             onValue(eventoRef, (snapshot) => {
                 const data = snapshot.val();
