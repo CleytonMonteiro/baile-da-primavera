@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
+import { getDatabase, ref, onValue, set, update } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
 
 const firebaseConfig = {
@@ -18,6 +18,7 @@ const database = getDatabase(app);
 const auth = getAuth(app);
 const layoutRef = ref(database, 'layoutMesas');
 const mesasRef = ref(database, 'mesas');
+const eventoRef = ref(database, 'informacoesEvento');
 
 const adminLoginForm = document.getElementById('admin-login-form');
 const adminLoginEmailInput = document.getElementById('login-email-admin');
@@ -33,7 +34,9 @@ const resetMesasBtn = document.getElementById('reset-mesas-btn');
 const addColunaBtn = document.getElementById('add-coluna-btn');
 const toggleExcluirBtn = document.getElementById('toggle-excluir-btn');
 const loadingOverlay = document.getElementById('loading-overlay');
-
+const eventNameInput = document.getElementById('event-name-input');
+const eventDateInput = document.getElementById('event-date-input');
+const saveEventInfoBtn = document.getElementById('save-event-info-btn');
 const secaoEsquerdaAdmin = document.getElementById('secao-esquerda-admin');
 const secaoCentroAdmin = document.getElementById('secao-centro-admin');
 const secaoDireitaAdmin = document.getElementById('secao-direita-admin');
@@ -54,18 +57,8 @@ function showToast(text, isError = false) {
 }
 
 function handleAdminLogin() {
-    adminLoginErroSpan.style.display = 'none'; // Esconde o erro antigo
-
     signInWithEmailAndPassword(auth, adminLoginEmailInput.value, adminLoginSenhaInput.value)
-        .then((userCredential) => {
-            // Sucesso no login. O onAuthStateChanged vai cuidar do resto.
-            console.log("Login bem-sucedido para:", userCredential.user.email);
-        })
-        .catch((error) => {
-            // Falha no login. Mostra o erro na tela.
-            console.error("Falha no login:", error.code, error.message);
-            adminLoginErroSpan.style.display = 'block';
-        });
+        .catch(() => adminLoginErroSpan.style.display = 'block');
 }
 
 function handleAdminLogout() {
@@ -219,14 +212,25 @@ function toggleDeleteMode() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    if(!adminLoginBtn) {
-        console.error("Botão de login não encontrado no DOM.");
-        return;
-    }
-    
     adminLoginBtn.addEventListener('click', handleAdminLogin);
+    adminLogoutBtn.addEventListener('click', handleAdminLogout);
+    
+    saveEventInfoBtn.addEventListener('click', () => {
+        const newName = eventNameInput.value.trim();
+        const newDate = eventDateInput.value;
 
-    // O resto dos listeners
+        if (newName && newDate) {
+            update(eventoRef, { 
+                nome: newName,
+                data: newDate 
+            })
+            .then(() => showToast("Informações do evento salvas!"))
+            .catch(error => showToast("Erro ao salvar: " + error.message, true));
+        } else {
+            showToast("O nome e a data do evento são obrigatórios.", true);
+        }
+    });
+
     adminContent.addEventListener('click', (e) => {
         if (isDeleteMode) {
             const mesaBtn = e.target.closest('.excluir-mesa-btn');
@@ -246,7 +250,6 @@ document.addEventListener('DOMContentLoaded', () => {
     resetMesasBtn.addEventListener('click', resetarMesas);
     addColunaBtn.addEventListener('click', adicionarColuna);
     toggleExcluirBtn.addEventListener('click', toggleDeleteMode);
-    adminLogoutBtn.addEventListener('click', handleAdminLogout);
     
     onAuthStateChanged(auth, (user) => {
         const adminEmail = "cleyton@aabb-aracaju.com.br"; 
@@ -265,12 +268,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     renderizarLayoutAdmin();
                 });
             });
+
+            onValue(eventoRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    eventNameInput.value = data.nome || '';
+                    eventDateInput.value = data.data || '';
+                }
+            });
+
         } else {
             isLoggedIn = false;
             adminStatusText.textContent = 'Faça login para gerenciar.';
             adminLogoutBtn.style.display = 'none';
             adminContent.style.display = 'none';
             adminLoginForm.style.display = 'flex';
+
             if(loadingOverlay) loadingOverlay.style.display = 'none';
             if (user) {
                 signOut(auth);

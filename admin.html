@@ -3,82 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Administração - Baile da Primavera</title>
+    <title>Painel de Administração</title>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        .admin-container {
-            max-width: 1400px;
-            width: 100%;
-            margin-top: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
-        .layout-salão-admin {
-            width: 100%;
-            overflow-x: auto;
-            background-color: #f0f2f5;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 15px;
-        }
-        .scroll-container-admin {
-            display: flex;
-            gap: 30px;
-            padding: 10px;
-        }
-        .secao-admin {
-            display: flex;
-            gap: 15px;
-        }
-        .coluna-admin {
-            min-height: 400px;
-            min-width: 80px;
-            background-color: #fff;
-            border-radius: 8px;
-            padding: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            align-items: center;
-            border: 2px dashed #ccc;
-            position: relative;
-        }
-        .coluna-admin:empty {
-            border: 2px dashed #aaa;
-            background-color: #eee;
-        }
-        .coluna-admin .excluir-coluna-btn {
-            position: absolute; top: -10px; right: -10px; background-color: #dc3545; color: white;
-            border: none; border-radius: 50%; width: 24px; height: 24px;
-            display: none; justify-content: center; align-items: center;
-            font-size: 0.8em; cursor: pointer; z-index: 1;
-        }
-        .sortable-drag { opacity: 0.5; }
-        .sortable-ghost { background-color: #c9e2ff; border: 2px dashed #007bff; }
-        .mesa {
-            position: relative; width: 60px; height: 60px; border-radius: 50%;
-            font-weight: bold; font-size: 1.2em; color: white;
-            display: flex; justify-content: center; align-items: center;
-            cursor: move; flex-shrink: 0; background-color: #6c757d;
-        }
-        .excluir-mesa-btn {
-            position: absolute; top: -5px; right: -5px; background-color: #dc3545; color: white;
-            border: none; border-radius: 50%; width: 18px; height: 18px;
-            font-size: 0.7em; display: none; justify-content: center; align-items: center;
-            cursor: pointer; z-index: 1;
-        }
-        .botoes-admin {
-            margin-top: 20px; display: flex; flex-wrap: wrap;
-            gap: 10px; justify-content: center;
-        }
-        .delete-mode .excluir-mesa-btn, .delete-mode .excluir-coluna-btn { display: flex; }
-        .delete-mode .mesa, .delete-mode .coluna-admin { cursor: not-allowed; border: 2px dashed #dc3545; }
-    </style>
 </head>
 <body>
 
@@ -94,7 +22,7 @@
         <button id="logout-btn-admin" style="display: none;">Sair</button>
     </div>
 
-    <div id="admin-login-form" class="modal" style="display: flex;">
+    <div id="admin-login-form" class="modal">
         <h2>Login do Administrador</h2>
         <label for="login-email-admin">E-mail:</label>
         <input type="email" id="login-email-admin" placeholder="E-mail de admin" value="cleyton@aabb-aracaju.com.br" required>
@@ -105,6 +33,17 @@
     </div>
 
     <div class="admin-container" id="admin-content" style="display: none;">
+        
+        <div class="evento-container">
+            <label for="event-name-input"><strong>Nome:</strong></label>
+            <input type="text" id="event-name-input" placeholder="Digite o nome do evento">
+            
+            <label for="event-date-input"><strong>Data:</strong></label>
+            <input type="date" id="event-date-input">
+            
+            <button id="save-event-info-btn">Salvar Info</button>
+        </div>
+
         <h3>Editar Layout das Mesas (Arraste e solte)</h3>
         
         <div class="layout-salão-admin">
