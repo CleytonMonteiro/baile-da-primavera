@@ -30,12 +30,12 @@ main { padding: 20px; }
     align-items: flex-start;
 }
 
-/* --- LARGURA DA COLUNA DIMINUÍDA --- */
+/* --- LARGURA DA COLUNA DIMINUÍDA AINDA MAIS --- */
 .layout-column {
     border: 2px dashed #ccc;
     border-radius: 8px;
     padding: 15px;
-    width: 120px; /* Largura reduzida de 150px para 120px */
+    width: 100px; /* Largura reduzida de 120px para 100px */
     background-color: #f8f9fa;
     position: relative;
     flex-shrink: 0; 
@@ -52,7 +52,6 @@ main { padding: 20px; }
     min-height: 50px; 
 }
 
-/* --- NÚMERO CENTRALIZADO --- */
 .mesa-item { 
     background-color: #007bff; 
     color: white; 
@@ -60,18 +59,17 @@ main { padding: 20px; }
     border-radius: 8px;
     display: flex; 
     align-items: center; 
-    justify-content: center; /* Alterado para center */
+    justify-content: center;
     font-weight: bold; 
     cursor: grab; 
     user-select: none; 
     width: 100%;
     box-sizing: border-box;
-    position: relative; /* Necessário para posicionar o botão de excluir */
+    position: relative;
 }
 .mesa-item span { font-size: 1.2em; }
 .mesa-item:active { cursor: grabbing; }
 
-/* --- BOTÃO DE EXCLUIR REPOSICIONADO --- */
 .remove-mesa-btn { 
     display: none; 
     background-color: #c82333; 
