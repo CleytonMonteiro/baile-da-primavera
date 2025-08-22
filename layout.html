@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de Layout do Salão</title>
+    <link rel="stylesheet" href="layout-style.css">
+</head>
+<body>
+    <header>
+        <h1>Editor de Layout do Salão</h1>
+        <nav>
+            <a href="admin.html" class="nav-button">Voltar ao Dashboard</a>
+        </nav>
+    </header>
+
+    <main>
+        <div class="controls-bar">
+            <div class="control-group">
+                <button id="add-column-btn">Adicionar Nova Coluna</button>
+            </div>
+            <div class="control-group">
+                <label class="switch-label">Modo Exclusão:</label>
+                <label class="switch">
+                    <input type="checkbox" id="delete-mode-toggle">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+        </div>
+
+        <div id="editor-container" class="editor-container">
+            </div>
+
+        <div class="save-container">
+            <button id="save-layout-btn">SALVAR NOVO LAYOUT</button>
+        </div>
+    </main>
+    
+    <script type="module" src="layout-script.js"></script>
+</body>
+</html>

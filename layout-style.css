@@ -1,0 +1,43 @@
+body { font-family: Arial, sans-serif; background-color: #f0f2f5; margin: 0; color: #333; }
+header { background-color: #6f42c1; color: white; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+header h1 { margin: 0; }
+.nav-button { color: white; background-color: rgba(255, 255, 255, 0.2); padding: 10px 15px; border-radius: 5px; text-decoration: none; font-weight: bold; transition: background-color 0.2s; }
+.nav-button:hover { background-color: rgba(255, 255, 255, 0.4); }
+
+main { padding: 20px; max-width: 1400px; margin: auto; }
+
+.controls-bar { display: flex; justify-content: space-between; align-items: center; background-color: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px; }
+.control-group { display: flex; align-items: center; gap: 10px; }
+#add-column-btn { background-color: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+
+.editor-container { display: flex; gap: 20px; padding: 10px; background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); overflow-x: auto; min-height: 300px; align-items: flex-start; }
+.layout-column { border: 2px dashed #ccc; border-radius: 8px; padding: 15px; min-width: 220px; background-color: #f8f9fa; position: relative; }
+.layout-column h3 { margin-top: 0; padding-bottom: 10px; border-bottom: 1px solid #ddd; }
+.remove-column-btn { display: none; position: absolute; top: 10px; right: 10px; background-color: #dc3545; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-size: 1.2em; line-height: 25px; text-align: center; }
+
+.mesas-list { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; min-height: 50px; }
+.mesa-item { background-color: #007bff; color: white; padding: 8px 12px; border-radius: 20px; display: flex; align-items: center; gap: 8px; font-weight: bold; cursor: grab; }
+.remove-mesa-btn { display: none; background-color: #c82333; border: none; border-radius: 50%; width: 20px; height: 20px; color: white; cursor: pointer; font-weight: bold; }
+
+.add-mesa-form { display: flex; gap: 10px; }
+.add-mesa-form input { width: 80px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; }
+.add-mesa-form button { padding: 8px 15px; border: none; background-color: #28a745; color: white; border-radius: 5px; cursor: pointer; font-weight: bold; }
+
+.save-container { margin-top: 30px; text-align: center; }
+#save-layout-btn { padding: 15px 40px; font-size: 1.2em; font-weight: bold; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.2s; }
+#save-layout-btn:hover { background-color: #218838; }
+
+/* Estilos do Modo Exclusão */
+.delete-mode-active .remove-mesa-btn, .delete-mode-active .remove-column-btn { display: inline-block; }
+.delete-mode-active .mesa-item, .delete-mode-active .layout-column { border: 2px solid #dc3545; }
+
+/* Estilos do Toggle Switch */
+.switch-label { font-weight: bold; }
+.switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; }
+.slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; }
+input:checked + .slider { background-color: #dc3545; }
+input:checked + .slider:before { transform: translateX(26px); }
+.slider.round { border-radius: 34px; }
+.slider.round:before { border-radius: 50%; }
