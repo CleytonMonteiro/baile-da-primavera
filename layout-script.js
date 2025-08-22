@@ -13,9 +13,6 @@ const firebaseConfig = {
     measurementId: "G-L21G98V5CL"
 };
 
-// ===================================================================
-// SEU LAYOUT PADRÃO FOI INSERIDO AQUI
-// ===================================================================
 const defaultLayout = {
   "col-cen-1": [67, 68, 69],
   "col-cen-2": [64, 65, 66],
@@ -35,7 +32,6 @@ const defaultLayout = {
   "col-esq-3": [78, 79, 80, 81, 82, 83, 84, 85],
   "col-esq-4": [70, 71, 72, 73, 74, 75, 76, 77]
 };
-// ===================================================================
 
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
@@ -60,7 +56,28 @@ onAuthStateChanged(auth, (user) => {
 function renderEditor() {
     editorContainer.innerHTML = '';
     
-    Object.keys(editableLayout).sort().forEach(columnId => {
+    // --- LÓGICA DE ORDENAÇÃO CUSTOMIZADA ---
+    const getColumnWeight = (columnId) => {
+        if (columnId.startsWith('col-esq')) return 1;
+        if (columnId.startsWith('col-cen')) return 2;
+        if (columnId.startsWith('col-dir')) return 3;
+        return 4; // Para colunas com outros nomes
+    };
+
+    const sortedColumnKeys = Object.keys(editableLayout).sort((a, b) => {
+        const weightA = getColumnWeight(a);
+        const weightB = getColumnWeight(b);
+
+        if (weightA !== weightB) {
+            return weightA - weightB; // Ordena por grupo (esq, cen, dir)
+        }
+        
+        // Se for do mesmo grupo, ordena pelo nome completo (ex: col-esq-1, col-esq-2)
+        return a.localeCompare(b);
+    });
+    // --- FIM DA LÓGICA DE ORDENAÇÃO ---
+
+    sortedColumnKeys.forEach(columnId => {
         const columnData = editableLayout[columnId] || [];
         const columnDiv = document.createElement('div');
         columnDiv.className = 'layout-column';
