@@ -3,270 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Administração</title>
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        /* CSS COMPLETO EMBUTIDO PARA O ADMIN */
-        body { font-family: Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; color: #333; display: flex; flex-direction: column; align-items: center; text-align: center; }
-        h1 { color: #007bff; margin-bottom: 20px; }
-        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.9); display: flex; justify-content: center; align-items: center; flex-direction: column; z-index: 9999; font-size: 1.2em; color: #333; }
-        .spinner { border: 6px solid #f3f3f3; border-top: 6px solid #007bff; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 15px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #auth-status-admin { margin-bottom: 20px; }
-        .modal { display: none; flex-direction: column; align-items: center; gap: 15px; background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000; width: 90%; max-width: 350px; }
-        .modal label { align-self: flex-start; font-weight: bold; }
-        .modal input, .modal select, .modal button { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 1em; box-sizing: border-box; }
-        .modal button { cursor: pointer; background-color: #007bff; color: white; border: none; font-weight: bold; transition: background-color 0.2s; }
-        .modal button:hover { background-color: #0056b3; }
-        .mensagem-erro { color: #dc3545; font-size: 0.9em; display: none; align-self: flex-start; text-align: left; width: 100%; }
-        .admin-container { max-width: 1400px; width: 100%; margin-top: 20px; display: flex; flex-direction: column; align-items: center; text-align: center; }
-        .evento-container { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 15px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .evento-container input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-        .evento-container input[type="text"] { flex-grow: 1; }
-        .layout-salão-admin { width: 100%; overflow-x: auto; background-color: #e9ecef; padding: 20px; border-radius: 8px; margin-top: 15px; }
-        .scroll-container-admin { display: flex; gap: 30px; padding: 10px; }
-        .secao-admin { display: flex; gap: 15px; }
-        .coluna-admin { min-height: 400px; min-width: 80px; background-color: #fff; border-radius: 8px; padding: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 10px; align-items: center; border: 2px dashed #ccc; position: relative; }
-        .coluna-admin:empty { border: 2px dashed #aaa; background-color: #e9ecef; }
-        .coluna-admin .mesa { background-color: #6c757d; cursor: move; width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; border-radius: 50%; font-weight: bold; font-size: 1.2em; color: white; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); position: relative; }
-        .botoes-admin { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-        .botoes-admin button, .botoes-admin a { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; text-decoration: none; font-size: 14px; font-family: Arial, sans-serif;}
-        #add-coluna-btn, #add-mesa-btn, #salvar-layout-btn, #toggle-excluir-btn, #save-event-info-btn { background-color: #007bff; }
-        #reset-mesas-btn { background-color: #dc3545; }
-        .voltar-btn { background-color: #6c757d; }
-        .sortable-drag { opacity: 0.5; }
-        .sortable-ghost { background-color: #c9e2ff; border: 2px dashed #007bff; }
-        .coluna-admin .excluir-coluna-btn { position: absolute; top: -10px; right: -10px; background-color: #dc3545; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; display: none; justify-content: center; align-items: center; font-size: 0.8em; cursor: pointer; z-index: 1; }
-        .mesa .excluir-mesa-btn { position: absolute; top: -5px; right: -5px; background-color: #dc3545; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 0.7em; display: none; justify-content: center; align-items: center; cursor: pointer; z-index: 1; }
-        .delete-mode .excluir-mesa-btn, .delete-mode .excluir-coluna-btn { display: flex; }
-        .delete-mode .mesa, .delete-mode .coluna-admin { cursor: not-allowed; border-color: #dc3545; }
-    </style>
+    <title>Dashboard do Supervisor - AABB</title>
+    <link rel="stylesheet" href="admin-style.css">
 </head>
 <body>
+    <header>
+        <h1>Dashboard de Controle</h1>
+        <a href="index.html">Ver Mapa de Mesas</a>
+    </header>
 
-    <div id="loading-overlay">
-        <div class="spinner"></div>
-        <span>Carregando Painel...</span>
-    </div>
-
-    <h1>Painel de Administração</h1>
-
-    <div id="auth-status-admin">
-        <span id="status-text-admin">Aguardando login...</span>
-        <button id="logout-btn-admin" style="display: none;">Sair</button>
-    </div>
-
-    <div id="admin-login-form" class="modal">
-        <h2>Login do Administrador</h2>
-        <label for="login-email-admin">E-mail:</label>
-        <input type="email" id="login-email-admin" placeholder="E-mail de admin" value="cleyton@aabb-aracaju.com.br" required>
-        <label for="login-senha-admin">Senha:</label>
-        <input type="password" id="login-senha-admin" placeholder="Senha" required>
-        <span id="login-erro-admin" class="mensagem-erro">E-mail ou senha incorretos.</span>
-        <button id="login-btn-admin">Entrar</button>
-    </div>
-
-    <div class="admin-container" id="admin-content" style="display: none;">
-        <div class="evento-container">
-            <label for="event-name-input"><strong>Nome:</strong></label>
-            <input type="text" id="event-name-input" placeholder="Digite o nome do evento">
-            <label for="event-date-input"><strong>Data:</strong></label>
-            <input type="date" id="event-date-input">
-            <button id="save-event-info-btn">Salvar Info</button>
-        </div>
-        <h3>Editar Layout das Mesas (Arraste e solte)</h3>
-        <div class="layout-salão-admin">
-            <div class="scroll-container-admin">
-                <div class="secao-admin" id="secao-esquerda-admin"></div>
-                <div class="secao-admin" id="secao-centro-admin"></div>
-                <div class="secao-admin" id="secao-direita-admin"></div>
+    <main id="dashboard-container">
+        <section id="kpi-cards" class="dashboard-section">
+            <div class="card">
+                <h3>Total Arrecadado</h3>
+                <p id="total-arrecadado">R$ 0,00</p>
             </div>
-        </div>
-        <div class="botoes-admin">
-            <button id="add-coluna-btn">Adicionar Coluna</button>
-            <button id="add-mesa-btn">Adicionar Nova Mesa</button>
-            <button id="reset-mesas-btn">Resetar Mesas</button>
-            <button id="salvar-layout-btn">Salvar Layout</button>
-            <a href="index.html" class="voltar-btn">Ver Salão</a>
-            <button id="toggle-excluir-btn">Modo Excluir</button>
-        </div>
-    </div>
+            <div class="card">
+                <h3>Mesas Vendidas</h3>
+                <p id="mesas-vendidas">0</p>
+            </div>
+            <div class="card">
+                <h3>Mesas Reservadas</h3>
+                <p id="mesas-reservadas">0</p>
+            </div>
+            <div class="card">
+                <h3>Mesas Livres</h3>
+                <p id="mesas-livres">0</p>
+            </div>
+        </section>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-    
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-        import { getDatabase, ref, onValue, set, update } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+        <section id="data-details" class="dashboard-section">
+            <div id="chart-container" class="card">
+                <h3>Distribuição das Mesas</h3>
+                <canvas id="statusChart"></canvas>
+            </div>
+            <div id="table-container" class="card">
+                <div class="table-header">
+                    <h3>Lista de Todas as Mesas</h3>
+                    <input type="text" id="table-search-input" placeholder="Buscar na tabela...">
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr id="table-headers">
+                                <th data-sort="numero">Nº</th>
+                                <th data-sort="status">Status</th>
+                                <th data-sort="nome">Nome</th>
+                                <th data-sort="preco">Preço (R$)</th>
+                                <th data-sort="pago">Pagamento</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mesas-tbody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyDGVgqwdSOJJn0plwfKkHEsofxvfHFCf6w",
-            authDomain: "layoutsalaodefesta.firebaseapp.com",
-            databaseURL: "https://layoutsalaodefesta-default-rtdb.firebaseio.com",
-            projectId: "layoutsalaodefesta",
-            storageBucket: "layoutsalaodefesta.firebasestorage.app",
-            messagingSenderId: "1060371531536",
-            appId: "1:1060371531536:web:fbed496ff9a78982580795",
-            measurementId: "G-L21G98V5CL"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-        const auth = getAuth(app);
-        const layoutRef = ref(database, 'layoutMesas');
-        const mesasRef = ref(database, 'mesas');
-        const eventoRef = ref(database, 'informacoesEvento');
-        
-        document.addEventListener('DOMContentLoaded', () => {
-            const adminLoginForm = document.getElementById('admin-login-form');
-            const adminLoginEmailInput = document.getElementById('login-email-admin');
-            const adminLoginSenhaInput = document.getElementById('login-senha-admin');
-            const adminLoginBtn = document.getElementById('login-btn-admin');
-            const adminLoginErroSpan = document.getElementById('login-erro-admin');
-            const adminLogoutBtn = document.getElementById('logout-btn-admin');
-            const adminStatusText = document.getElementById('status-text-admin');
-            const adminContent = document.getElementById('admin-content');
-            const salvarLayoutBtn = document.getElementById('salvar-layout-btn');
-            const addMesaBtn = document.getElementById('add-mesa-btn');
-            const resetMesasBtn = document.getElementById('reset-mesas-btn');
-            const addColunaBtn = document.getElementById('add-coluna-btn');
-            const toggleExcluirBtn = document.getElementById('toggle-excluir-btn');
-            const loadingOverlay = document.getElementById('loading-overlay');
-            const eventNameInput = document.getElementById('event-name-input');
-            const eventDateInput = document.getElementById('event-date-input');
-            const saveEventInfoBtn = document.getElementById('save-event-info-btn');
-            const secaoEsquerdaAdmin = document.getElementById('secao-esquerda-admin');
-            const secaoCentroAdmin = document.getElementById('secao-centro-admin');
-            const secaoDireitaAdmin = document.getElementById('secao-direita-admin');
-
-            let mesasDataGlobal = {};
-            let layoutMesasGlobal = {};
-            let isDeleteMode = false;
-            
-            function showToast(text, isError = false) { Toastify({ text: text, duration: 3000, gravity: "top", position: "right", backgroundColor: isError ? "linear-gradient(to right, #ff5f6d, #ffc371)" : "linear-gradient(to right, #00b09b, #96c93d)", }).showToast(); }
-            function handleAdminLogin() { signInWithEmailAndPassword(auth, adminLoginEmailInput.value, adminLoginSenhaInput.value).catch(() => adminLoginErroSpan.style.display = 'block'); }
-            function handleAdminLogout() { signOut(auth); }
-
-            function renderizarLayoutAdmin() {
-                secaoEsquerdaAdmin.innerHTML = ''; secaoCentroAdmin.innerHTML = ''; secaoDireitaAdmin.innerHTML = '';
-                if (!layoutMesasGlobal) { inicializarSortable(); if(loadingOverlay) loadingOverlay.style.display = 'none'; return; }
-                for (const colId in layoutMesasGlobal) {
-                    const colunaDiv = document.createElement('div');
-                    colunaDiv.classList.add('coluna-admin');
-                    colunaDiv.id = `${colId}-admin`;
-                    const excluirColunaBtn = document.createElement('button');
-                    excluirColunaBtn.classList.add('excluir-coluna-btn');
-                    excluirColunaBtn.textContent = 'X';
-                    colunaDiv.appendChild(excluirColunaBtn);
-                    const mesasArray = Array.isArray(layoutMesasGlobal[colId]) ? layoutMesasGlobal[colId] : [];
-                    mesasArray.forEach(mesaNum => {
-                        const mesaDiv = document.createElement('div');
-                        mesaDiv.classList.add('mesa');
-                        mesaDiv.textContent = mesaNum.toString().padStart(2, '0');
-                        mesaDiv.dataset.numero = mesaNum;
-                        const excluirBtn = document.createElement('button');
-                        excluirBtn.classList.add('excluir-mesa-btn');
-                        excluirBtn.textContent = 'X';
-                        mesaDiv.appendChild(excluirBtn);
-                        colunaDiv.appendChild(mesaDiv);
-                    });
-                    if (colId.startsWith('col-esq')) secaoEsquerdaAdmin.appendChild(colunaDiv);
-                    else if (colId.startsWith('col-cen')) secaoCentroAdmin.appendChild(colunaDiv);
-                    else if (colId.startsWith('col-dir')) secaoDireitaAdmin.appendChild(colunaDiv);
-                    else secaoEsquerdaAdmin.appendChild(colunaDiv);
-                }
-                inicializarSortable();
-                const layoutContainer = document.querySelector('.layout-salão-admin');
-                if (isDeleteMode) layoutContainer.classList.add('delete-mode');
-                else layoutContainer.classList.remove('delete-mode');
-                if(loadingOverlay) loadingOverlay.style.display = 'none';
-            }
-
-            function inicializarSortable() {
-                [secaoEsquerdaAdmin, secaoCentroAdmin, secaoDireitaAdmin].forEach(secao => { if(secao) new Sortable(secao, { group: 'colunas', handle: '.coluna-admin', animation: 150, ghostClass: 'sortable-ghost', dragClass: 'sortable-drag' }); });
-                document.querySelectorAll('.coluna-admin').forEach(coluna => { new Sortable(coluna, { group: 'mesas', animation: 150, ghostClass: 'sortable-ghost', dragClass: 'sortable-drag' }); });
-            }
-
-            function salvarLayout() {
-                salvarLayoutBtn.textContent = 'Salvando...'; salvarLayoutBtn.disabled = true;
-                const novoLayout = {};
-                document.querySelectorAll('.coluna-admin').forEach(coluna => { const mesas = Array.from(coluna.children).filter(el => el.classList.contains('mesa')).map(mesaDiv => parseInt(mesaDiv.dataset.numero)); novoLayout[coluna.id.replace('-admin', '')] = mesas; });
-                set(layoutRef, novoLayout).then(() => showToast("Layout salvo com sucesso!")).catch(error => showToast("Erro ao salvar layout: " + error.message, true)).finally(() => { salvarLayoutBtn.textContent = 'Salvar Layout'; salvarLayoutBtn.disabled = false; });
-            }
-
-            function adicionarMesa() {
-                let mesasExistentes = [];
-                if (layoutMesasGlobal) { for (const colId in layoutMesasGlobal) { mesasExistentes = mesasExistentes.concat(layoutMesasGlobal[colId] || []); } }
-                const proximoNumero = Math.max(0, ...mesasExistentes.filter(n => n)) + 1;
-                const mesaDiv = document.createElement('div');
-                mesaDiv.classList.add('mesa');
-                mesaDiv.textContent = proximoNumero.toString().padStart(2, '0');
-                mesaDiv.dataset.numero = proximoNumero;
-                const excluirBtn = document.createElement('button');
-                excluirBtn.classList.add('excluir-mesa-btn');
-                excluirBtn.textContent = 'X';
-                mesaDiv.appendChild(excluirBtn);
-                const primeiraColuna = document.querySelector('.coluna-admin');
-                if (primeiraColuna) primeiraColuna.appendChild(mesaDiv);
-                else showToast("Adicione uma coluna antes de adicionar uma mesa.", true);
-            }
-
-            function resetarMesas() { if (confirm("ATENÇÃO!\n\nTem certeza que deseja apagar TODOS os dados de status e nomes de TODAS as mesas?\n\nEsta ação não pode ser desfeita.")) { set(mesasRef, {}).then(() => showToast("Todas as mesas foram resetadas com sucesso!")).catch(error => showToast("Erro ao resetar mesas: " + error.message, true)); } }
-            function excluirMesa(mesaDiv) { if (confirm(`Tem certeza que deseja excluir a mesa ${mesaDiv.dataset.numero}?`)) { mesaDiv.remove(); } }
-            function adicionarColuna() {
-                const proximoNumero = document.querySelectorAll('.coluna-admin').length + 1;
-                const novaColunaId = `col-nova-${proximoNumero}`;
-                const colunaDiv = document.createElement('div');
-                colunaDiv.classList.add('coluna-admin');
-                colunaDiv.id = `${novaColunaId}-admin`;
-                const excluirColunaBtn = document.createElement('button');
-                excluirColunaBtn.classList.add('excluir-coluna-btn');
-                excluirColunaBtn.textContent = 'X';
-                colunaDiv.appendChild(excluirColunaBtn);
-                secaoEsquerdaAdmin.appendChild(colunaDiv);
-                inicializarSortable();
-            }
-
-            function excluirColuna(colunaDiv) { if (colunaDiv.querySelectorAll('.mesa').length > 0) { showToast("Não é possível excluir uma coluna com mesas.", true); return; } if (confirm("Tem certeza que deseja excluir esta coluna?")) { colunaDiv.remove(); } }
-            function toggleDeleteMode() { isDeleteMode = !isDeleteMode; const layoutContainer = document.querySelector('.layout-salão-admin'); if (isDeleteMode) { layoutContainer.classList.add('delete-mode'); toggleExcluirBtn.textContent = 'Sair do Modo Excluir'; } else { layoutContainer.classList.remove('delete-mode'); toggleExcluirBtn.textContent = 'Modo Excluir'; } }
-
-            adminLoginBtn.addEventListener('click', handleAdminLogin);
-            adminLogoutBtn.addEventListener('click', handleAdminLogout);
-            saveEventInfoBtn.addEventListener('click', () => { const newName = eventNameInput.value.trim(); const newDate = eventDateInput.value; if (newName && newDate) { update(eventoRef, { nome: newName, data: newDate }).then(() => showToast("Informações do evento salvas!")).catch(error => showToast("Erro ao salvar: " + error.message, true)); } else { showToast("O nome e a data do evento são obrigatórios.", true); } });
-            adminContent.addEventListener('click', (e) => { if (isDeleteMode) { const mesaBtn = e.target.closest('.excluir-mesa-btn'); if (mesaBtn) { excluirMesa(mesaBtn.closest('.mesa')); return; } const colunaBtn = e.target.closest('.excluir-coluna-btn'); if (colunaBtn) { excluirColuna(colunaBtn.closest('.coluna-admin')); } } });
-            salvarLayoutBtn.addEventListener('click', salvarLayout);
-            addMesaBtn.addEventListener('click', adicionarMesa);
-            resetMesasBtn.addEventListener('click', resetarMesas);
-            addColunaBtn.addEventListener('click', adicionarColuna);
-            toggleExcluirBtn.addEventListener('click', toggleDeleteMode);
-            
-            onAuthStateChanged(auth, (user) => {
-                const adminEmail = "cleyton@aabb-aracaju.com.br"; 
-                if (user && user.email === adminEmail) {
-                    adminStatusText.textContent = `Logado como: ${user.email}`;
-                    adminLogoutBtn.style.display = 'inline-block';
-                    adminContent.style.display = 'flex';
-                    adminLoginForm.style.display = 'none';
-                    onValue(layoutRef, (snapshot) => {
-                        layoutMesasGlobal = snapshot.val() || {};
-                        onValue(mesasRef, (mesasSnapshot) => {
-                            mesasDataGlobal = mesasSnapshot.val() || {};
-                            renderizarLayoutAdmin();
-                        });
-                    });
-                    onValue(eventoRef, (snapshot) => { const data = snapshot.val(); if (data) { eventNameInput.value = data.nome || ''; eventDateInput.value = data.data || ''; } });
-                } else {
-                    adminStatusText.textContent = 'Faça login para gerenciar.';
-                    adminLogoutBtn.style.display = 'none';
-                    adminContent.style.display = 'none';
-                    adminLoginForm.style.display = 'flex';
-                    if(loadingOverlay) loadingOverlay.style.display = 'none';
-                    if (user) { signOut(auth); showToast("Acesso negado. Permissão apenas para administradores.", true); }
-                }
-            });
-        });
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="admin-script.js"></script>
 </body>
 </html>
