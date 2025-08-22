@@ -19,8 +19,28 @@ header p { margin: 5px 0 0; opacity: 0.9; }
 
 main { padding: 20px; max-width: 1600px; margin: auto; }
 
-.editor-container { display: flex; gap: 20px; padding: 10px; background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); overflow-x: auto; min-height: 400px; align-items: flex-start; }
-.layout-column { border: 2px dashed #ccc; border-radius: 8px; padding: 15px; min-width: 150px; background-color: #f8f9fa; position: relative; }
+/* --- MUDANÇA PRINCIPAL APLICADA AQUI --- */
+.editor-container {
+    display: flex;
+    flex-wrap: wrap; /* Permite que as colunas quebrem para a próxima linha */
+    justify-content: center; /* Centraliza o conjunto de colunas */
+    gap: 20px;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.layout-column {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 15px;
+    width: 180px; /* Largura fixa para cada coluna */
+    background-color: #f8f9fa;
+    position: relative;
+    flex-shrink: 0; /* Impede que as colunas encolham */
+}
+
 .layout-column h3 { margin-top: 0; padding-bottom: 10px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
 .remove-column-btn { display: none; background-color: #dc3545; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-size: 1.2em; line-height: 25px; text-align: center; }
 
