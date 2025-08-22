@@ -56,26 +56,21 @@ onAuthStateChanged(auth, (user) => {
 function renderEditor() {
     editorContainer.innerHTML = '';
     
-    // --- LÓGICA DE ORDENAÇÃO CUSTOMIZADA ---
     const getColumnWeight = (columnId) => {
         if (columnId.startsWith('col-esq')) return 1;
         if (columnId.startsWith('col-cen')) return 2;
         if (columnId.startsWith('col-dir')) return 3;
-        return 4; // Para colunas com outros nomes
+        return 4;
     };
 
     const sortedColumnKeys = Object.keys(editableLayout).sort((a, b) => {
         const weightA = getColumnWeight(a);
         const weightB = getColumnWeight(b);
-
         if (weightA !== weightB) {
-            return weightA - weightB; // Ordena por grupo (esq, cen, dir)
+            return weightA - weightB;
         }
-        
-        // Se for do mesmo grupo, ordena pelo nome completo (ex: col-esq-1, col-esq-2)
         return a.localeCompare(b);
     });
-    // --- FIM DA LÓGICA DE ORDENAÇÃO ---
 
     sortedColumnKeys.forEach(columnId => {
         const columnData = editableLayout[columnId] || [];
@@ -112,12 +107,32 @@ function renderEditor() {
 }
 
 onValue(layoutRef, (snapshot) => {
+    let dataFromDB = {};
     if (snapshot.exists() && Object.keys(snapshot.val()).length > 0) {
-        editableLayout = snapshot.val();
+        dataFromDB = snapshot.val();
     } else {
         console.log("Nenhum layout encontrado no Firebase. Carregando layout padrão.");
-        editableLayout = JSON.parse(JSON.stringify(defaultLayout));
+        dataFromDB = JSON.parse(JSON.stringify(defaultLayout));
     }
+
+    // --- CORREÇÃO APLICADA AQUI ---
+    // Garante que cada coluna seja um Array de verdade antes de usar.
+    editableLayout = {};
+    for (const columnId in dataFromDB) {
+        const columnData = dataFromDB[columnId];
+        if (Array.isArray(columnData)) {
+            // Se já for um array, ótimo.
+            editableLayout[columnId] = columnData;
+        } else if (typeof columnData === 'object' && columnData !== null) {
+            // Se for um objeto (como o Firebase às vezes retorna), converte para array.
+            editableLayout[columnId] = Object.values(columnData);
+        } else {
+            // Caso seja algo inesperado, cria uma coluna vazia.
+            editableLayout[columnId] = [];
+        }
+    }
+    // --- FIM DA CORREÇÃO ---
+
     renderEditor();
 });
 
