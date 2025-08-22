@@ -55,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (columnId.startsWith('col-dir')) return 3;
             return 4;
         };
+
         const sortedColumnKeys = Object.keys(editableLayout).sort((a, b) => {
             const weightA = getColumnWeight(a);
             const weightB = getColumnWeight(b);
