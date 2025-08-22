@@ -59,6 +59,8 @@ document.addEventListener('DOMContentLoaded', () => {
         mesaNumeroInput: document.getElementById('mesa-numero'),
         nomeCompletoInput: document.getElementById('nome-completo'),
         statusMesaSelect: document.getElementById('status-mesa'),
+        searchInput: document.getElementById('search-input'),
+        filterButtons: document.getElementById('filter-buttons'),
     };
 
     function renderInitialLayout() {
@@ -92,6 +94,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateMesasView() {
         if (!isInitialLayoutRendered || !mesasDataGlobal) return;
         
+        let searchTerm = elements.searchInput.value.toLowerCase();
+        let filterStatus = elements.filterButtons.querySelector('.filter-btn.active').dataset.status;
+
         document.querySelectorAll('.mesa').forEach(mesaDiv => {
             const mesaNum = mesaDiv.dataset.numero;
             const mesaData = mesasDataGlobal[mesaNum] || { status: 'livre' };
@@ -106,6 +111,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 mesaDiv.classList.remove('bloqueada');
                 mesaDiv.title = '';
             }
+            
+            const statusMatch = filterStatus === 'all' || mesaData.status === filterStatus;
+            const searchMatch = !searchTerm || mesaNum.toString().includes(searchTerm) || (mesaData.nome && mesaData.nome.toLowerCase().includes(searchTerm));
+            mesaDiv.style.display = (statusMatch && searchMatch) ? 'flex' : 'none';
         });
         updateStats();
     }
@@ -238,6 +247,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (mesaNum) await unlockTable(mesaNum);
         elements.cadastroForm.style.display = 'none';
     });
+    
+    elements.searchInput.addEventListener('input', updateMesasView);
+    elements.filterButtons.addEventListener('click', (e) => {
+        const target = e.target.closest('.filter-btn');
+        if (target) {
+            elements.filterButtons.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            target.classList.add('active');
+            updateMesasView();
+        }
+    });
 
     onAuthStateChanged(auth, (user) => {
         isSupervisorLoggedIn = !!user;
@@ -265,19 +284,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     onValue(layoutRef, (snapshot) => {
         layoutMesasGlobal = snapshot.val() || {};
-        if (!isInitialLayoutRendered) {
-            renderInitialLayout();
-        }
+        // Se o layout mudar, força a recriação da estrutura
+        renderInitialLayout();
     });
 
     onValue(mesasRef, (snapshot) => {
         mesasDataGlobal = snapshot.val() || {};
+        // Se só os dados das mesas mudarem, apenas atualiza a visão
         if (isInitialLayoutRendered) {
             updateMesasView();
         }
     });
-
-    // Listeners menores
+    
     document.getElementById('info-panel-close-btn').addEventListener('click', () => { elements.infoPanel.classList.remove('visible'); });
     document.getElementById('manage-table-btn').addEventListener('click', () => {
         const mesaNum = elements.infoPanel.dataset.currentTable;
@@ -298,4 +316,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     document.getElementById('cancelar-login-btn').addEventListener('click', () => { elements.loginForm.style.display = 'none'; });
+
+    // --- CORREÇÃO DE CACHE ADICIONADA AQUI ---
+    // Este evento força uma nova renderização sempre que a página se torna visível
+    window.addEventListener('pageshow', (event) => {
+        // A propriedade 'persisted' é verdadeira se a página foi carregada do cache
+        if (event.persisted) {
+            console.log("Página carregada do cache. Forçando nova renderização.");
+            isInitialLayoutRendered = false; // Força a recriação do layout
+            renderInitialLayout(); 
+        }
+    });
 });
