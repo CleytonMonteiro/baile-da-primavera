@@ -34,6 +34,7 @@ const searchInput = document.getElementById('table-search-input');
 const tableHeaders = document.getElementById('table-headers');
 const activityLogListEl = document.getElementById('activity-log-list');
 const ctx = document.getElementById('statusChart').getContext('2d');
+const backToMapLink = document.getElementById('back-to-map-link'); // NOVO ELEMENTO
 
 function updateUI() {
     if (!layoutDataGlobal || !mesasDataGlobal) return;
@@ -133,6 +134,13 @@ tableHeaders.addEventListener('click', (e) => {
         currentSort.direction = 'asc';
     }
     renderTable();
+});
+
+// --- LISTENER ADICIONADO PARA O LINK DE VOLTAR ---
+backToMapLink.addEventListener('click', (e) => {
+    e.preventDefault(); // Previne a navegação normal do link
+    // Redireciona para o index.html com um parâmetro de tempo para "burlar" o cache
+    window.location.href = `index.html?t=${new Date().getTime()}`;
 });
 
 onValue(layoutRef, (snapshot) => { layoutDataGlobal = snapshot.val() || {}; updateUI(); });
