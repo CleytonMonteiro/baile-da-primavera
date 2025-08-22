@@ -75,7 +75,9 @@ document.addEventListener('DOMContentLoaded', () => {
             mesasListDiv.dataset.column = columnId;
             
             if (Array.isArray(columnData)) {
-                columnData.sort((a,b)=>a-b).forEach(mesaNum => {
+                // --- CORREÇÃO APLICADA AQUI ---
+                // A ordenação numérica foi removida para respeitar a ordem do drag-and-drop
+                columnData.forEach(mesaNum => {
                     const mesaItemDiv = document.createElement('div');
                     mesaItemDiv.className = 'mesa-item';
                     mesaItemDiv.dataset.mesa = mesaNum;
@@ -138,6 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             editableLayout[columnId].push(mesaNum);
+            editableLayout[columnId].sort((a,b) => a-b); // Ordena apenas ao adicionar
             renderEditor();
         } else {
             alert("Número de mesa inválido.");
@@ -178,9 +181,9 @@ document.addEventListener('DOMContentLoaded', () => {
             for(const columnId in editableLayout) {
                 if(editableLayout[columnId].length === 0) {
                     delete editableLayout[columnId];
-                } else {
-                    editableLayout[columnId].sort((a,b) => a - b);
                 }
+                // --- CORREÇÃO APLICADA AQUI ---
+                // A ordenação foi removida daqui também para preservar a ordem manual
             }
             set(layoutRef, editableLayout)
                 .then(() => alert("Layout salvo com sucesso!"))
