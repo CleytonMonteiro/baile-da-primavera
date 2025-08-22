@@ -19,7 +19,6 @@ header p { margin: 5px 0 0; opacity: 0.9; }
 
 main { padding: 20px; }
 
-/* --- ESTILO REVERTIDO PARA O LAYOUT HORIZONTAL --- */
 .editor-container {
     display: flex;
     gap: 30px;
@@ -35,18 +34,40 @@ main { padding: 20px; }
     border: 2px dashed #ccc;
     border-radius: 8px;
     padding: 15px;
-    width: auto; /* Largura automática baseada no conteúdo */
+    width: auto;
     background-color: #f8f9fa;
     position: relative;
     flex-shrink: 0; 
 }
-/* --- FIM DA MUDANÇA --- */
 
-.layout-column h3 { margin-top: 0; padding-bottom: 10px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
+.layout-column h3 { margin-top: 0; padding-bottom: 10px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; white-space: nowrap; }
 .remove-column-btn { display: none; background-color: #dc3545; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-size: 1.2em; line-height: 25px; text-align: center; }
 
-.mesas-list { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; min-height: 50px; justify-content: center; }
-.mesa-item { background-color: #007bff; color: white; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: grab; user-select: none; width: 50px; height: 50px; position: relative; }
+/* --- MUDANÇA PRINCIPAL AQUI --- */
+.mesas-list { 
+    display: flex;
+    flex-wrap: nowrap; /* Impede que as mesas quebrem a linha */
+    gap: 10px; 
+    margin-bottom: 20px; 
+    min-height: 50px; 
+}
+
+.mesa-item { 
+    background-color: #007bff; 
+    color: white; 
+    padding: 0; 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-weight: bold; 
+    cursor: grab; 
+    user-select: none; 
+    width: 50px; 
+    height: 50px; 
+    position: relative;
+    flex-shrink: 0; /* Impede que a mesa encolha */
+}
 .mesa-item span { font-size: 1.2em; }
 .mesa-item:active { cursor: grabbing; }
 .remove-mesa-btn { display: none; background-color: #c82333; border: none; border-radius: 50%; width: 20px; height: 20px; color: white; cursor: pointer; font-weight: bold; position: absolute; top: -5px; right: -5px; }
