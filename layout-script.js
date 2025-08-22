@@ -158,10 +158,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (target.classList.contains('remove-mesa-btn')) {
             const mesaNum = parseInt(target.dataset.mesa);
-            const mesaIndex = editableLayout[columnId].indexOf(mesaNum);
-            if (mesaIndex > -1) {
-                editableLayout[columnId].splice(mesaIndex, 1);
-                renderEditor();
+            // --- CORREÇÃO APLICADA AQUI ---
+            // Verifica se a coluna é realmente um array antes de tentar remover.
+            if (editableLayout[columnId] && Array.isArray(editableLayout[columnId])) {
+                const mesaIndex = editableLayout[columnId].indexOf(mesaNum);
+                if (mesaIndex > -1) {
+                    editableLayout[columnId].splice(mesaIndex, 1);
+                    renderEditor();
+                }
             }
         }
         
