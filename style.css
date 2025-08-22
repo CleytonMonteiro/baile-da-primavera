@@ -17,7 +17,6 @@ h1 { color: #007bff; margin-bottom: 10px; }
     font-weight: bold;
 }
 #login-link-btn:hover, #logout-btn:hover { background-color: #007bff; color: white; }
-
 .search-filter-container, .export-container { width: 100%; max-width: 800px; padding: 20px; margin-bottom: 10px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 15px; align-items: center; box-sizing: border-box; }
 .export-container { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 15px; }
 .export-container label { font-weight: bold; }
@@ -39,7 +38,7 @@ h1 { color: #007bff; margin-bottom: 10px; }
 .scroll-container { display: flex; gap: 30px; padding: 10px; }
 .secao-mesas { display: flex; gap: 20px; }
 .coluna-mesas { display: flex; flex-direction: column; gap: 15px; }
-.mesa { width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; border-radius: 50%; font-weight: bold; font-size: 1.2em; color: white; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; position: relative; }
+.mesa { width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; border-radius: 50%; font-weight: bold; font-size: 1.2em; color: white; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s; position: relative; }
 .mesa:hover { transform: scale(1.05); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); }
 .mesa.livre { background-color: #28a745; }
 .mesa.reservada { background-color: #ffc107; }
@@ -62,22 +61,7 @@ h1 { color: #007bff; margin-bottom: 10px; }
 .voltar-btn { background-color: #6c757d !important; }
 .voltar-btn:hover { background-color: #545b62 !important; }
 .mensagem-erro { color: #dc3545; font-size: 0.9em; display: none; align-self: flex-start; text-align: left; width: 100%; }
-.info-panel {
-    position: fixed;
-    top: 0;
-    right: -100%;
-    width: 320px;
-    height: 100%;
-    background-color: #fff;
-    box-shadow: -5px 0 15px rgba(0,0,0,0.15);
-    padding: 25px;
-    box-sizing: border-box;
-    transition: right 0.4s ease-in-out;
-    z-index: 9998;
-    text-align: left;
-    display: flex;
-    flex-direction: column;
-}
+.info-panel { position: fixed; top: 0; right: -100%; width: 320px; height: 100%; background-color: #fff; box-shadow: -5px 0 15px rgba(0,0,0,0.15); padding: 25px; box-sizing: border-box; transition: right 0.4s ease-in-out; z-index: 9998; text-align: left; display: flex; flex-direction: column; }
 .info-panel.visible { right: 0; }
 .info-panel h3 { margin-top: 0; color: #007bff; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; }
 .info-panel p { margin: 12px 0; line-height: 1.6; font-size: 1.1em; color: #555; }
@@ -85,26 +69,11 @@ h1 { color: #007bff; margin-bottom: 10px; }
 .info-panel .close-btn { position: absolute; top: 15px; right: 20px; font-size: 2em; font-weight: bold; background: none; border: none; cursor: pointer; color: #aaa; line-height: 1; }
 .info-panel .close-btn:hover { color: #333; }
 #info-panel-dados-restritos { border-top: 2px solid #f0f2f5; margin-top: 15px; padding-top: 10px; }
-#manage-table-btn {
-    background-color: #007bff;
-    color: white;
-    padding: 12px;
-    border-radius: 5px;
-    border: none;
-    font-size: 1.1em;
-    cursor: pointer;
-    margin-top: auto;
-    font-weight: bold;
-    display: none;
-}
+#manage-table-btn { background-color: #007bff; color: white; padding: 12px; border-radius: 5px; border: none; font-size: 1.1em; cursor: pointer; margin-top: auto; font-weight: bold; display: none; }
 #manage-table-btn:hover { background-color: #0056b3; }
-
-/* --- ADICIONAR ESTE CÓDIGO AO FINAL DO style.css --- */
-
 .mesa.bloqueada {
-    background-color: #868e96; /* Um cinza neutro */
+    background-color: #868e96;
     cursor: not-allowed;
-    /* Adiciona um ícone de cadeado sobre a mesa */
     background-image: 
         linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
         url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 1.5A5.25 5.25 0 006.75 6.75v3.75H6a2.25 2.25 0 00-2.25 2.25v8.25A2.25 2.25 0 006 23.25h12A2.25 2.25 0 0020.25 21v-8.25A2.25 2.25 0 0018 10.5h-.75V6.75A5.25 5.25 0 0012 1.5zM8.25 6.75a3.75 3.75 0 017.5 0v3.75H8.25V6.75z'/%3E%3C/svg%3E");
@@ -112,8 +81,7 @@ h1 { color: #007bff; margin-bottom: 10px; }
     background-position: center, center;
     background-repeat: no-repeat, no-repeat;
 }
-
 .mesa.bloqueada:hover {
-    transform: scale(1); /* Remove o efeito de zoom no hover */
+    transform: scale(1);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }

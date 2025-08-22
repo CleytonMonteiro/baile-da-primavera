@@ -14,22 +14,10 @@
 
     <main id="dashboard-container">
         <section id="kpi-cards" class="dashboard-section">
-            <div class="card">
-                <h3>Total Arrecadado</h3>
-                <p id="total-arrecadado">R$ 0,00</p>
-            </div>
-            <div class="card">
-                <h3>Mesas Vendidas</h3>
-                <p id="mesas-vendidas">0</p>
-            </div>
-            <div class="card">
-                <h3>Mesas Reservadas</h3>
-                <p id="mesas-reservadas">0</p>
-            </div>
-            <div class="card">
-                <h3>Mesas Livres</h3>
-                <p id="mesas-livres">0</p>
-            </div>
+            <div class="card"><h3>Total Arrecadado</h3><p id="total-arrecadado">R$ 0,00</p></div>
+            <div class="card"><h3>Mesas Vendidas</h3><p id="mesas-vendidas">0</p></div>
+            <div class="card"><h3>Mesas Reservadas</h3><p id="mesas-reservadas">0</p></div>
+            <div class="card"><h3>Mesas Livres</h3><p id="mesas-livres">0</p></div>
         </section>
 
         <section id="data-details" class="dashboard-section">
@@ -53,10 +41,16 @@
                                 <th data-sort="pago">Pagamento</th>
                             </tr>
                         </thead>
-                        <tbody id="mesas-tbody">
-                            </tbody>
+                        <tbody id="mesas-tbody"></tbody>
                     </table>
                 </div>
+            </div>
+        </section>
+        
+        <section id="activity-log-section" class="dashboard-section">
+            <div class="card">
+                <h3>Log de Atividades Recentes</h3>
+                <ul id="activity-log-list"></ul>
             </div>
         </section>
     </main>

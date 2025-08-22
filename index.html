@@ -7,11 +7,9 @@
     
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <div id="loading-overlay">
         <div class="spinner"></div>
         <span>Carregando Mesas...</span>
@@ -59,18 +57,9 @@
     </div>
 
     <div class="legenda">
-        <div class="legenda-item">
-            <div class="legenda-cor" style="background-color: #28a745;"></div>
-            <span>Livre</span>
-        </div>
-        <div class="legenda-item">
-            <div class="legenda-cor" style="background-color: #ffc107;"></div>
-            <span>Reservada</span>
-        </div>
-        <div class="legenda-item">
-            <div class="legenda-cor" style="background-color: #dc3545;"></div>
-            <span>Vendida</span>
-        </div>
+        <div class="legenda-item"><div class="legenda-cor" style="background-color: #28a745;"></div><span>Livre</span></div>
+        <div class="legenda-item"><div class="legenda-cor" style="background-color: #ffc107;"></div><span>Reservada</span></div>
+        <div class="legenda-item"><div class="legenda-cor" style="background-color: #dc3545;"></div><span>Vendida</span></div>
     </div>
 
     <div class="layout-salão">
@@ -98,9 +87,9 @@
     <div id="login-form" class="modal">
         <h2>Login do Supervisor</h2>
         <label for="login-email">E-mail:</label>
-        <input type="email" id="login-email" placeholder="E-mail de supervisor" required>
+        <input type="email" id="login-email" required>
         <label for="login-senha">Senha:</label>
-        <input type="password" id="login-senha" placeholder="Senha" required>
+        <input type="password" id="login-senha" required>
         <span id="login-erro" class="mensagem-erro">E-mail ou senha incorretos.</span>
         <div class="botoes-form">
             <button id="login-btn">Entrar</button>
@@ -112,14 +101,14 @@
         <h2 id="modal-titulo">Gerenciar Mesa <span id="modal-numero-mesa"></span></h2>
         <input type="hidden" id="mesa-numero">
         <label for="nome-completo">Nome Completo:</label>
-        <input type="text" id="nome-completo" placeholder="Digite o nome completo" required>
-        <span id="nome-erro" class="mensagem-erro">O nome é obrigatório para reservar/vender.</span>
+        <input type="text" id="nome-completo" required>
+        <span id="nome-erro" class="mensagem-erro">O nome é obrigatório.</span>
         <label for="preco-mesa">Preço (R$):</label>
-        <input type="number" id="preco-mesa" placeholder="Ex: 150.00" step="0.01" min="0">
+        <input type="number" id="preco-mesa" step="0.01" min="0">
         <label for="contato-mesa">Nº de Contato:</label>
-        <input type="tel" id="contato-mesa" placeholder="(99) 99999-9999">
+        <input type="tel" id="contato-mesa">
         <label for="email-mesa">E-mail:</label>
-        <input type="email" id="email-mesa" placeholder="exemplo@email.com">
+        <input type="email" id="email-mesa">
         <label for="status-mesa">Status:</label>
         <select id="status-mesa">
             <option value="livre">Livre</option>
