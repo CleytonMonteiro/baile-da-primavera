@@ -9,7 +9,10 @@
 <body>
     <header>
         <h1>Dashboard de Controle</h1>
-        <a href="index.html" id="back-to-map-link">Ver Mapa de Mesas</a>
+        <nav class="header-nav">
+            <a href="layout.html" class="nav-button">Gerenciar Layout</a>
+            <a href="index.html" id="back-to-map-link" class="nav-button">Ver Mapa de Mesas</a>
+        </nav>
     </header>
 
     <main id="dashboard-container">
@@ -19,7 +22,6 @@
             <div class="card"><h3>Mesas Reservadas</h3><p id="mesas-reservadas">0</p></div>
             <div class="card"><h3>Mesas Livres</h3><p id="mesas-livres">0</p></div>
         </section>
-
         <section id="data-details" class="dashboard-section">
             <div id="chart-container" class="card">
                 <h3>Distribuição das Mesas</h3>
@@ -46,7 +48,6 @@
                 </div>
             </div>
         </section>
-        
         <section id="activity-log-section" class="dashboard-section">
             <div class="card">
                 <h3>Log de Atividades Recentes</h3>
