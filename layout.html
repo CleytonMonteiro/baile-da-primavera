@@ -9,33 +9,30 @@
 <body>
     <header>
         <h1>Editor de Layout do Salão</h1>
-        <nav>
-            <a href="admin.html" class="nav-button">Voltar ao Dashboard</a>
-        </nav>
+        <p>Arraste as mesas para movê-las entre as colunas. Use a barra de ferramentas abaixo para outras ações.</p>
     </header>
 
     <main>
-        <div class="controls-bar">
-            <div class="control-group">
-                <button id="add-column-btn">Adicionar Nova Coluna</button>
-            </div>
-            <div class="control-group">
-                <label class="switch-label">Modo Exclusão:</label>
-                <label class="switch">
-                    <input type="checkbox" id="delete-mode-toggle">
-                    <span class="slider round"></span>
-                </label>
-            </div>
-        </div>
-
         <div id="editor-container" class="editor-container">
             </div>
-
-        <div class="save-container">
-            <button id="save-layout-btn">SALVAR NOVO LAYOUT</button>
-        </div>
     </main>
     
+    <footer class="bottom-toolbar">
+        <button id="add-column-btn" title="Adicionar Nova Coluna">Adicionar Coluna</button>
+        <button id="add-mesa-btn" title="Adicionar Nova Mesa">Adicionar Mesa</button>
+        <button id="reset-layout-btn" class="secondary-btn" title="Restaurar o Layout Padrão">Resetar Mesas</button>
+        <button id="save-layout-btn" class="save-btn" title="Salvar o Layout no Banco de Dados">Salvar Layout</button>
+        <a href="index.html" class="nav-button" title="Voltar para o Mapa de Vendas">Ver Salão</a>
+        <div class="control-group">
+            <label class="switch-label">Modo Excluir:</label>
+            <label class="switch">
+                <input type="checkbox" id="delete-mode-toggle">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script type="module" src="layout-script.js"></script>
 </body>
 </html>

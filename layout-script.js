@@ -38,11 +38,11 @@ const database = getDatabase(app);
 const auth = getAuth(app);
 const layoutRef = ref(database, 'layoutMesas');
 
-// --- CÓDIGO ENVOLVIDO PELO DOMContentLoaded ---
 document.addEventListener('DOMContentLoaded', () => {
     const editorContainer = document.getElementById('editor-container');
     const deleteModeToggle = document.getElementById('delete-mode-toggle');
     const addColumnBtn = document.getElementById('add-column-btn');
+    const addMesaBtn = document.getElementById('add-mesa-btn');
     const saveLayoutBtn = document.getElementById('save-layout-btn');
     const resetLayoutBtn = document.getElementById('reset-layout-btn');
 
@@ -55,9 +55,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    function onDragEnd(evt) {
+        const mesaNum = parseInt(evt.item.dataset.mesa);
+        const fromColumnId = evt.from.dataset.column;
+        const toColumnId = evt.to.dataset.column;
+
+        // Remove do array da coluna de origem
+        const fromArray = editableLayout[fromColumnId];
+        const fromIndex = fromArray.indexOf(mesaNum);
+        if (fromIndex > -1) {
+            fromArray.splice(fromIndex, 1);
+        }
+
+        // Adiciona ao array da coluna de destino na nova posição
+        const toArray = editableLayout[toColumnId];
+        toArray.splice(evt.newDraggableIndex, 0, mesaNum);
+    }
+
     function renderEditor() {
         editorContainer.innerHTML = '';
-        
         const getColumnWeight = (columnId) => {
             if (columnId.startsWith('col-esq')) return 1;
             if (columnId.startsWith('col-cen')) return 2;
@@ -78,33 +94,33 @@ document.addEventListener('DOMContentLoaded', () => {
             const columnData = editableLayout[columnId] || [];
             const columnDiv = document.createElement('div');
             columnDiv.className = 'layout-column';
+            columnDiv.dataset.column = columnId; // Atributo para identificar a coluna
             columnDiv.innerHTML = `<h3>${columnId} <button class="remove-column-btn" data-column="${columnId}">X</button></h3>`;
             
             const mesasListDiv = document.createElement('div');
             mesasListDiv.className = 'mesas-list';
+            mesasListDiv.dataset.column = columnId; // Atributo para o SortableJS
             
-            if(Array.isArray(columnData)) {
+            if (Array.isArray(columnData)) {
                 columnData.forEach(mesaNum => {
                     const mesaItemDiv = document.createElement('div');
                     mesaItemDiv.className = 'mesa-item';
-                    mesaItemDiv.innerHTML = `
-                        <span>${mesaNum}</span>
-                        <button class="remove-mesa-btn" data-column="${columnId}" data-mesa="${mesaNum}">-</button>
-                    `;
+                    mesaItemDiv.dataset.mesa = mesaNum;
+                    mesaItemDiv.innerHTML = `<span>${mesaNum}</span><button class="remove-mesa-btn" data-column="${columnId}" data-mesa="${mesaNum}">-</button>`;
                     mesasListDiv.appendChild(mesaItemDiv);
                 });
             }
             
             columnDiv.appendChild(mesasListDiv);
-            
-            const addForm = document.createElement('div');
-            addForm.className = 'add-mesa-form';
-            addForm.innerHTML = `
-                <input type="number" placeholder="Nº Mesa" class="add-mesa-input">
-                <button class="add-mesa-btn" data-column="${columnId}">Adicionar</button>
-            `;
-            columnDiv.appendChild(addForm);
             editorContainer.appendChild(columnDiv);
+
+            // Inicia o SortableJS em cada lista de mesas
+            new Sortable(mesasListDiv, {
+                group: 'shared-mesas',
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                onEnd: onDragEnd
+            });
         });
     }
 
@@ -113,7 +129,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (snapshot.exists() && Object.keys(snapshot.val()).length > 0) {
             dataFromDB = snapshot.val();
         } else {
-            console.log("Nenhum layout encontrado no Firebase. Carregando layout padrão.");
             dataFromDB = JSON.parse(JSON.stringify(defaultLayout));
         }
 
@@ -144,6 +159,29 @@ document.addEventListener('DOMContentLoaded', () => {
             alert("Erro: Já existe uma coluna com este nome.");
         }
     });
+    
+    addMesaBtn.addEventListener('click', () => {
+        const columnOptions = Object.keys(editableLayout).sort().join(', ');
+        const columnId = prompt(`Em qual coluna você quer adicionar a mesa?\nOpções: ${columnOptions}`);
+        
+        if (!columnId || !editableLayout[columnId]) {
+            alert("Nome de coluna inválido ou não encontrado.");
+            return;
+        }
+
+        const mesaNum = parseInt(prompt(`Digite o número da nova mesa para a coluna ${columnId}:`));
+        if (mesaNum) {
+             if (Object.values(editableLayout).flat().includes(mesaNum)) {
+                alert("Erro: Este número de mesa já existe em outra coluna.");
+                return;
+            }
+            editableLayout[columnId].push(mesaNum);
+            editableLayout[columnId].sort((a,b) => a-b);
+            renderEditor();
+        } else {
+            alert("Número de mesa inválido.");
+        }
+    });
 
     resetLayoutBtn.addEventListener('click', () => {
         if (confirm("Tem certeza que deseja descartar todas as alterações atuais e restaurar o layout padrão do salão?")) {
@@ -156,23 +194,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const target = e.target;
         const columnId = target.dataset.column;
 
-        if (target.classList.contains('add-mesa-btn')) {
-            const input = target.previousElementSibling;
-            const mesaNum = parseInt(input.value);
-            if (mesaNum) {
-                if (!editableLayout[columnId]) editableLayout[columnId] = [];
-                if (!editableLayout[columnId].includes(mesaNum)) {
-                    editableLayout[columnId].push(mesaNum);
-                    editableLayout[columnId].sort((a,b) => a-b);
-                    renderEditor();
-                } else {
-                     alert("Número de mesa já existente na coluna.");
-                }
-            } else {
-                alert("Número de mesa inválido.");
-            }
-        }
-        
         if (target.classList.contains('remove-mesa-btn')) {
             const mesaNum = parseInt(target.dataset.mesa);
             const mesaIndex = editableLayout[columnId].indexOf(mesaNum);
@@ -192,6 +213,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     saveLayoutBtn.addEventListener('click', () => {
         if(confirm("Tem certeza que deseja salvar este novo layout? O layout antigo no banco de dados será substituído permanentemente.")) {
+            // Remove colunas vazias antes de salvar
+            for(const columnId in editableLayout) {
+                if(editableLayout[columnId].length === 0) {
+                    delete editableLayout[columnId];
+                }
+            }
             set(layoutRef, editableLayout)
                 .then(() => alert("Layout salvo com sucesso!"))
                 .catch((err) => alert("Erro ao salvar o layout: " + err.message));
