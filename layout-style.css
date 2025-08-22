@@ -3,7 +3,7 @@ body {
     background-color: #f0f2f5;
     margin: 0;
     color: #333;
-    padding-bottom: 80px; /* Espaço para a barra de ferramentas fixa */
+    padding-bottom: 80px;
 }
 
 header {
@@ -17,42 +17,44 @@ header {
 header h1 { margin: 0; }
 header p { margin: 5px 0 0; opacity: 0.9; }
 
-main { padding: 20px; max-width: 1600px; margin: auto; }
+main { padding: 20px; }
 
-/* --- MUDANÇA PRINCIPAL APLICADA AQUI --- */
+/* --- ESTILO REVERTIDO PARA O LAYOUT HORIZONTAL --- */
 .editor-container {
     display: flex;
-    flex-wrap: wrap; /* Permite que as colunas quebrem para a próxima linha */
-    justify-content: center; /* Centraliza o conjunto de colunas */
-    gap: 20px;
+    gap: 30px;
     padding: 20px;
     background-color: white;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    overflow-x: auto;
+    align-items: flex-start;
 }
 
 .layout-column {
     border: 2px dashed #ccc;
     border-radius: 8px;
     padding: 15px;
-    width: 180px; /* Largura fixa para cada coluna */
+    width: auto; /* Largura automática baseada no conteúdo */
     background-color: #f8f9fa;
     position: relative;
-    flex-shrink: 0; /* Impede que as colunas encolham */
+    flex-shrink: 0; 
 }
+/* --- FIM DA MUDANÇA --- */
 
 .layout-column h3 { margin-top: 0; padding-bottom: 10px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
 .remove-column-btn { display: none; background-color: #dc3545; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-size: 1.2em; line-height: 25px; text-align: center; }
 
-.mesas-list { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; min-height: 50px; }
-.mesa-item { background-color: #007bff; color: white; padding: 8px 12px; border-radius: 20px; display: flex; align-items: center; gap: 8px; font-weight: bold; cursor: grab; user-select: none; }
+.mesas-list { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; min-height: 50px; justify-content: center; }
+.mesa-item { background-color: #007bff; color: white; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: grab; user-select: none; width: 50px; height: 50px; position: relative; }
+.mesa-item span { font-size: 1.2em; }
 .mesa-item:active { cursor: grabbing; }
-.remove-mesa-btn { display: none; background-color: #c82333; border: none; border-radius: 50%; width: 20px; height: 20px; color: white; cursor: pointer; font-weight: bold; }
+.remove-mesa-btn { display: none; background-color: #c82333; border: none; border-radius: 50%; width: 20px; height: 20px; color: white; cursor: pointer; font-weight: bold; position: absolute; top: -5px; right: -5px; }
 
 .sortable-ghost { opacity: 0.4; background-color: #6c757d; }
 .sortable-drag { opacity: 1 !important; }
 
-.delete-mode-active .remove-mesa-btn, .delete-mode-active .remove-column-btn { display: inline-block; }
+.delete-mode-active .remove-mesa-btn, .delete-mode-active .remove-column-btn { display: block; }
 .delete-mode-active .mesa-item, .delete-mode-active .layout-column { border: 2px solid #dc3545; }
 
 .bottom-toolbar {
@@ -71,17 +73,7 @@ main { padding: 20px; max-width: 1600px; margin: auto; }
     flex-wrap: wrap;
 }
 
-.bottom-toolbar button, .bottom-toolbar a {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    font-size: 1em;
-    font-weight: bold;
-    cursor: pointer;
-    text-decoration: none;
-    color: white;
-    display: inline-block;
-}
+.bottom-toolbar button, .bottom-toolbar a { padding: 10px 20px; border: none; border-radius: 5px; font-size: 1em; font-weight: bold; cursor: pointer; text-decoration: none; color: white; display: inline-block; }
 #add-column-btn { background-color: #007bff; }
 #add-mesa-btn { background-color: #17a2b8; }
 .secondary-btn { background-color: #ffc107; color: #212529; }

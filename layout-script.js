@@ -55,7 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (columnId.startsWith('col-dir')) return 3;
             return 4;
         };
-
         const sortedColumnKeys = Object.keys(editableLayout).sort((a, b) => {
             const weightA = getColumnWeight(a);
             const weightB = getColumnWeight(b);
@@ -75,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
             mesasListDiv.dataset.column = columnId;
             
             if (Array.isArray(columnData)) {
-                columnData.forEach(mesaNum => {
+                columnData.sort((a,b)=>a-b).forEach(mesaNum => {
                     const mesaItemDiv = document.createElement('div');
                     mesaItemDiv.className = 'mesa-item';
                     mesaItemDiv.dataset.mesa = mesaNum;
@@ -138,7 +137,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             editableLayout[columnId].push(mesaNum);
-            editableLayout[columnId].sort((a,b) => a-b);
             renderEditor();
         } else {
             alert("Número de mesa inválido.");
@@ -154,12 +152,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     editorContainer.addEventListener('click', (e) => {
         const target = e.target;
-        const columnId = target.dataset.column;
-
         if (target.classList.contains('remove-mesa-btn')) {
+            const columnId = target.dataset.column;
             const mesaNum = parseInt(target.dataset.mesa);
-            // --- CORREÇÃO APLICADA AQUI ---
-            // Verifica se a coluna é realmente um array antes de tentar remover.
             if (editableLayout[columnId] && Array.isArray(editableLayout[columnId])) {
                 const mesaIndex = editableLayout[columnId].indexOf(mesaNum);
                 if (mesaIndex > -1) {
@@ -168,8 +163,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
-        
         if (target.classList.contains('remove-column-btn')) {
+            const columnId = target.dataset.column;
             if (confirm(`Tem certeza que deseja excluir a coluna "${columnId}" e todas as suas mesas?`)) {
                 delete editableLayout[columnId];
                 renderEditor();
@@ -182,6 +177,8 @@ document.addEventListener('DOMContentLoaded', () => {
             for(const columnId in editableLayout) {
                 if(editableLayout[columnId].length === 0) {
                     delete editableLayout[columnId];
+                } else {
+                    editableLayout[columnId].sort((a,b) => a - b);
                 }
             }
             set(layoutRef, editableLayout)
