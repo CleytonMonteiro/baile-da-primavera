@@ -65,21 +65,16 @@ document.addEventListener('DOMContentLoaded', () => {
         exportCsvBtn: document.getElementById('export-csv-btn'),
         exportPdfBtn: document.getElementById('export-pdf-btn'),
         exportFilter: document.getElementById('export-filter'),
-        contatoMesaInput: document.getElementById('contato-mesa') // Adicionado para a máscara
+        contatoMesaInput: document.getElementById('contato-mesa')
     };
 
-    // --- CORREÇÕES APLICADAS AQUI ---
-    // 1. Força o campo de nome a ficar sempre em maiúsculas.
     elements.nomeCompletoInput.addEventListener('input', () => {
         elements.nomeCompletoInput.value = elements.nomeCompletoInput.value.toUpperCase();
     });
 
-    // 2. Aplica a máscara de telefone celular (9 dígitos).
     IMask(elements.contatoMesaInput, {
         mask: '(00) 00000-0000'
     });
-    // --- FIM DAS CORREÇÕES ---
-
 
     function renderInitialLayout() {
         if (!layoutMesasGlobal) return;
@@ -395,4 +390,10 @@ document.addEventListener('DOMContentLoaded', () => {
             renderInitialLayout(); 
         }
     });
+
+    setInterval(() => {
+        if (isInitialLayoutRendered) {
+            updateMesasView();
+        }
+    }, 30000);
 });
