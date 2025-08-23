@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AABB ARACAJU</title>
+    
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="style.css">
@@ -13,14 +14,18 @@
         <div class="spinner"></div>
         <span>Carregando Mesas...</span>
     </div>
+
     <h1 id="event-title">Carregando Evento...</h1>
     <p id="event-date" class="event-date"></p>
+    
     <a href="admin.html" class="admin-link">Painel de Admin</a>
+
     <div id="auth-status">
         <span id="status-text"></span>
         <button id="login-link-btn" style="display: none;">Login Supervisor</button>
         <button id="logout-btn" style="display: none;">Sair</button>
     </div>
+
     <div class="search-filter-container">
         <input type="search" id="search-input" placeholder="Buscar por Nº da Mesa ou Nome...">
         <div id="filter-buttons" class="filter-buttons">
@@ -30,6 +35,7 @@
             <button class="filter-btn" data-status="vendida">Vendidas</button>
         </div>
     </div>
+
     <div id="stats-container" class="stats-container">
         <span class="stat-item">Total: <strong id="total-count">0</strong></span>
         <span class="stat-item livre">Livres: <strong id="livre-count">0</strong></span>
@@ -37,21 +43,25 @@
         <span class="stat-item vendida">Vendidas: <strong id="vendida-count">0</strong></span>
         <span id="stat-arrecadado" class="stat-item arrecadado">Arrecadado: <strong id="arrecadado-total">R$ 0,00</strong></span>
     </div>
+    
     <div id="export-container" class="export-container" style="display: none;">
         <label for="export-filter">Exportar Relatório:</label>
         <select id="export-filter">
             <option value="ocupadas">Vendidas e Reservadas</option>
             <option value="vendida">Apenas Vendidas</option>
             <option value="reservada">Apenas Reservadas</option>
+            <option value="livre">Apenas Livres</option>
         </select>
-        <button id="export-csv-btn">Gerar CSV (Excel)</button>
+        <button id="export-csv-btn">Gerar CSV</button>
         <button id="export-pdf-btn">Gerar PDF</button>
     </div>
+
     <div class="legenda">
         <div class="legenda-item"><div class="legenda-cor" style="background-color: #28a745;"></div><span>Livre</span></div>
         <div class="legenda-item"><div class="legenda-cor" style="background-color: #ffc107;"></div><span>Reservada</span></div>
         <div class="legenda-item"><div class="legenda-cor" style="background-color: #dc3545;"></div><span>Vendida</span></div>
     </div>
+
     <div class="layout-salão">
         <div class="scroll-container">
             <div class="secao-mesas" id="col-esq"></div>
@@ -59,6 +69,7 @@
             <div class="secao-mesas" id="col-dir"></div>
         </div>
     </div>
+
     <div id="info-panel" class="info-panel">
         <button id="info-panel-close-btn" class="close-btn">&times;</button>
         <h3>Detalhes da Mesa <span id="info-panel-numero"></span></h3>
@@ -72,6 +83,7 @@
         </div>
         <button id="manage-table-btn">Gerenciar Mesa</button>
     </div>
+
     <div id="login-form" class="modal">
         <h2>Login do Supervisor</h2>
         <label for="login-email">E-mail:</label>
@@ -84,6 +96,7 @@
             <button id="cancelar-login-btn" class="voltar-btn">Cancelar</button>
         </div>
     </div>
+
     <div id="cadastro-form" class="modal">
         <h2 id="modal-titulo">Gerenciar Mesa <span id="modal-numero-mesa"></span></h2>
         <input type="hidden" id="mesa-numero">
@@ -112,10 +125,12 @@
             <button id="cancelar-btn" class="voltar-btn">Cancelar</button>
         </div>
     </div>
+    
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script src="https://unpkg.com/imask"></script>
     <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/jspdf-autotable@3.5.23/dist/jspdf.plugin.autotable.js"></script>
+    
     <script type="module" src="script.js"></script>
 </body>
 </html>

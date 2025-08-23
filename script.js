@@ -27,7 +27,6 @@ let mesasDataGlobal = {};
 let layoutMesasGlobal = {};
 let isSupervisorLoggedIn = false;
 let isInitialLayoutRendered = false;
-let activeModalTable = null;
 
 async function logActivity(action, details) {
     if (!currentUser) return;
@@ -66,16 +65,21 @@ document.addEventListener('DOMContentLoaded', () => {
         exportCsvBtn: document.getElementById('export-csv-btn'),
         exportPdfBtn: document.getElementById('export-pdf-btn'),
         exportFilter: document.getElementById('export-filter'),
-        contatoMesaInput: document.getElementById('contato-mesa')
+        contatoMesaInput: document.getElementById('contato-mesa') // Adicionado para a máscara
     };
 
+    // --- CORREÇÕES APLICADAS AQUI ---
+    // 1. Força o campo de nome a ficar sempre em maiúsculas.
     elements.nomeCompletoInput.addEventListener('input', () => {
         elements.nomeCompletoInput.value = elements.nomeCompletoInput.value.toUpperCase();
     });
 
+    // 2. Aplica a máscara de telefone celular (9 dígitos).
     IMask(elements.contatoMesaInput, {
         mask: '(00) 00000-0000'
     });
+    // --- FIM DAS CORREÇÕES ---
+
 
     function renderInitialLayout() {
         if (!layoutMesasGlobal) return;
@@ -92,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 colunaDiv.classList.add('coluna-mesas');
                 (layoutMesasGlobal[colId] || []).forEach(mesaNum => {
                     const mesaDiv = document.createElement('div');
-                    mesaDiv.className = 'mesa';
+                    mesaDiv.className = 'mesa livre';
                     mesaDiv.textContent = String(mesaNum).padStart(2, '0');
                     mesaDiv.dataset.numero = mesaNum;
                     colunaDiv.appendChild(mesaDiv);
@@ -115,14 +119,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const mesaNum = mesaDiv.dataset.numero;
             const mesaData = mesasDataGlobal[mesaNum] || { status: 'livre' };
             
-            mesaDiv.classList.remove('livre', 'reservada', 'vendida', 'bloqueada');
-            mesaDiv.classList.add(mesaData.status);
+            mesaDiv.className = `mesa ${mesaData.status}`;
             
             const lockInfo = mesaData.lockInfo;
             if (lockInfo && (Date.now() - lockInfo.timestamp < LOCK_TIMEOUT_MINUTES * 60 * 1000)) {
                 mesaDiv.classList.add('bloqueada');
                 mesaDiv.title = `Bloqueada por ${lockInfo.userEmail}`;
             } else {
+                mesaDiv.classList.remove('bloqueada');
                 mesaDiv.title = '';
             }
             
@@ -167,11 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     async function abrirModalCadastro(mesaNum) {
-        if (activeModalTable && activeModalTable !== mesaNum) {
-            await unlockTable(activeModalTable);
-        }
-        activeModalTable = mesaNum;
-
         await lockTable(mesaNum);
         const mesaData = mesasDataGlobal[mesaNum] || { status: 'livre' };
         document.getElementById('modal-numero-mesa').textContent = String(mesaNum).padStart(2, '0');
@@ -187,9 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showInfoPanel(mesaNum) {
-        const defaults = { status: 'livre', nome: '---', preco: 0, contato: '', email: '', pago: false };
-        const mesaData = { ...defaults, ...mesasDataGlobal[mesaNum] };
-
+        const mesaData = mesasDataGlobal[mesaNum] || { status: 'livre' };
         elements.infoPanel.dataset.currentTable = mesaNum;
         document.getElementById('info-panel-numero').textContent = String(mesaNum).padStart(2, '0');
         document.getElementById('info-panel-status').textContent = mesaData.status.charAt(0).toUpperCase() + mesaData.status.slice(1);
@@ -215,11 +212,18 @@ document.addEventListener('DOMContentLoaded', () => {
         for (const colId in layoutMesasGlobal) {
             (layoutMesasGlobal[colId] || []).forEach(numeroMesa => {
                 const data = mesasDataGlobal[numeroMesa] || { status: 'livre' };
-                allTablesData.push({ numero: parseInt(numeroMesa), nome: data.nome || '---', contato: data.contato || '---', status: data.status || 'livre' });
+                allTablesData.push({
+                    numero: parseInt(numeroMesa),
+                    nome: data.nome || '---',
+                    contato: data.contato || '---',
+                    status: data.status || 'livre'
+                });
             });
         }
         const filteredData = allTablesData.filter(table => {
-            if (filterValue === 'ocupadas') { return table.status === 'reservada' || table.status === 'vendida'; }
+            if (filterValue === 'ocupadas') {
+                return table.status === 'reservada' || table.status === 'vendida';
+            }
             return table.status === filterValue;
         });
         return filteredData.sort((a, b) => a.numero - b.numero);
@@ -266,7 +270,6 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (mesaAntes.status === 'reservada' && status === 'vendida') { logAction = 'VENDA (de reserva)'; logDetails = `Reserva da Mesa ${mesaNum} (cliente ${nome}) foi efetivada como venda.`; }
         await logActivity(logAction, logDetails);
         await unlockTable(mesaNum);
-        activeModalTable = null;
         elements.cadastroForm.style.display = 'none';
     });
 
@@ -275,14 +278,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const nomeAntigo = mesasDataGlobal[mesaNum]?.nome || 'desconhecido';
         await set(ref(database, 'mesas/' + mesaNum), { nome: '', status: 'livre', contato: '', email: '', pago: false, lockInfo: null });
         await logActivity('LIBERAÇÃO', `Mesa ${mesaNum} (cliente ${nomeAntigo}) foi liberada.`);
-        activeModalTable = null;
         elements.cadastroForm.style.display = 'none';
     });
 
     document.getElementById('cancelar-btn').addEventListener('click', async () => {
         const mesaNum = elements.mesaNumeroInput.value;
         if (mesaNum) await unlockTable(mesaNum);
-        activeModalTable = null;
         elements.cadastroForm.style.display = 'none';
     });
     
@@ -394,10 +395,4 @@ document.addEventListener('DOMContentLoaded', () => {
             renderInitialLayout(); 
         }
     });
-
-    setInterval(() => {
-        if (isInitialLayoutRendered) {
-            updateMesasView();
-        }
-    }, 30000);
 });

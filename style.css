@@ -7,7 +7,15 @@ h1 { color: #007bff; margin-bottom: 10px; }
 .admin-link { position: absolute; top: 20px; right: 20px; text-decoration: none; font-weight: bold; color: #007bff; padding: 10px 15px; border: 1px solid #007bff; border-radius: 5px; transition: background-color 0.2s, color 0.2s; z-index: 100; }
 .admin-link:hover { background-color: #007bff; color: white; }
 #auth-status { margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-#login-link-btn, #logout-btn { background: none; border: 1px solid #007bff; color: #007bff; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+#login-link-btn, #logout-btn {
+    background: none;
+    border: 1px solid #007bff;
+    color: #007bff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
 #login-link-btn:hover, #logout-btn:hover { background-color: #007bff; color: white; }
 .search-filter-container, .export-container { width: 100%; max-width: 800px; padding: 20px; margin-bottom: 10px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 15px; align-items: center; box-sizing: border-box; }
 .export-container { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 15px; }
@@ -64,10 +72,16 @@ h1 { color: #007bff; margin-bottom: 10px; }
 #manage-table-btn { background-color: #007bff; color: white; padding: 12px; border-radius: 5px; border: none; font-size: 1.1em; cursor: pointer; margin-top: auto; font-weight: bold; display: none; }
 #manage-table-btn:hover { background-color: #0056b3; }
 .mesa.bloqueada {
-    background-color: #6c757d !important;
-    cursor: not-allowed !important;
-    background-image: none !important;
+    background-color: #868e96;
+    cursor: not-allowed;
+    background-image: 
+        linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 1.5A5.25 5.25 0 006.75 6.75v3.75H6a2.25 2.25 0 00-2.25 2.25v8.25A2.25 2.25 0 006 23.25h12A2.25 2.25 0 0020.25 21v-8.25A2.25 2.25 0 0018 10.5h-.75V6.75A5.25 5.25 0 0012 1.5zM8.25 6.75a3.75 3.75 0 017.5 0v3.75H8.25V6.75z'/%3E%3C/svg%3E");
+    background-size: 45%, 50%;
+    background-position: center, center;
+    background-repeat: no-repeat, no-repeat;
 }
 .mesa.bloqueada:hover {
     transform: scale(1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
