@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 colunaDiv.classList.add('coluna-mesas');
                 (layoutMesasGlobal[colId] || []).forEach(mesaNum => {
                     const mesaDiv = document.createElement('div');
-                    mesaDiv.className = 'mesa livre';
+                    mesaDiv.className = 'mesa'; // Inicia apenas com a classe base
                     mesaDiv.textContent = String(mesaNum).padStart(2, '0');
                     mesaDiv.dataset.numero = mesaNum;
                     colunaDiv.appendChild(mesaDiv);
@@ -104,6 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadingOverlay.style.display = 'none';
     }
 
+    // --- FUNÇÃO DE ATUALIZAÇÃO REFINADA ---
     function updateMesasView() {
         if (!isInitialLayoutRendered || !mesasDataGlobal) return;
         
@@ -114,14 +115,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const mesaNum = mesaDiv.dataset.numero;
             const mesaData = mesasDataGlobal[mesaNum] || { status: 'livre' };
             
-            mesaDiv.className = `mesa ${mesaData.status}`;
+            // Gerenciamento de classes mais seguro
+            mesaDiv.classList.remove('livre', 'reservada', 'vendida', 'bloqueada');
+            mesaDiv.classList.add(mesaData.status);
             
             const lockInfo = mesaData.lockInfo;
             if (lockInfo && (Date.now() - lockInfo.timestamp < LOCK_TIMEOUT_MINUTES * 60 * 1000)) {
                 mesaDiv.classList.add('bloqueada');
                 mesaDiv.title = `Bloqueada por ${lockInfo.userEmail}`;
             } else {
-                mesaDiv.classList.remove('bloqueada');
                 mesaDiv.title = '';
             }
             
