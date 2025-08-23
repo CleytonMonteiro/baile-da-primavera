@@ -64,8 +64,22 @@ document.addEventListener('DOMContentLoaded', () => {
         exportContainer: document.getElementById('export-container'),
         exportCsvBtn: document.getElementById('export-csv-btn'),
         exportPdfBtn: document.getElementById('export-pdf-btn'),
-        exportFilter: document.getElementById('export-filter')
+        exportFilter: document.getElementById('export-filter'),
+        contatoMesaInput: document.getElementById('contato-mesa') // Adicionado para a máscara
     };
+
+    // --- CORREÇÕES APLICADAS AQUI ---
+    // 1. Força o campo de nome a ficar sempre em maiúsculas.
+    elements.nomeCompletoInput.addEventListener('input', () => {
+        elements.nomeCompletoInput.value = elements.nomeCompletoInput.value.toUpperCase();
+    });
+
+    // 2. Aplica a máscara de telefone celular (9 dígitos).
+    IMask(elements.contatoMesaInput, {
+        mask: '(00) 00000-0000'
+    });
+    // --- FIM DAS CORREÇÕES ---
+
 
     function renderInitialLayout() {
         if (!layoutMesasGlobal) return;
@@ -164,7 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.nomeCompletoInput.value = mesaData.nome || '';
         elements.statusMesaSelect.value = mesaData.status || 'livre';
         document.getElementById('preco-mesa').value = mesaData.preco || '';
-        document.getElementById('contato-mesa').value = mesaData.contato || '';
+        elements.contatoMesaInput.value = mesaData.contato || '';
         document.getElementById('email-mesa').value = mesaData.email || '';
         document.getElementById('pagamento-confirmado').checked = mesaData.pago || false;
         document.getElementById('pagamento-container').style.display = (mesaData.status === 'vendida' || elements.statusMesaSelect.value === 'vendida') ? 'flex' : 'none';
@@ -195,7 +209,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function getExportData() {
         const filterValue = elements.exportFilter.value;
         const allTablesData = [];
-
         for (const colId in layoutMesasGlobal) {
             (layoutMesasGlobal[colId] || []).forEach(numeroMesa => {
                 const data = mesasDataGlobal[numeroMesa] || { status: 'livre' };
@@ -207,14 +220,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
         }
-        
         const filteredData = allTablesData.filter(table => {
             if (filterValue === 'ocupadas') {
                 return table.status === 'reservada' || table.status === 'vendida';
             }
             return table.status === filterValue;
         });
-
         return filteredData.sort((a, b) => a.numero - b.numero);
     }
 
@@ -248,18 +259,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const mesaDataParaSalvar = {
             nome, status,
             preco: parseFloat(document.getElementById('preco-mesa').value) || 0,
-            contato: document.getElementById('contato-mesa').value,
+            contato: elements.contatoMesaInput.value,
             email: document.getElementById('email-mesa').value.trim(),
             pago: (status === 'vendida') ? document.getElementById('pagamento-confirmado').checked : false
         };
         await update(ref(database, 'mesas/' + mesaNum), mesaDataParaSalvar);
-        
         let logAction = 'EDIÇÃO', logDetails = `Dados da Mesa ${mesaNum} (cliente ${nome}) foram atualizados.`;
         if (mesaAntes.status === 'livre' && status === 'vendida') { logAction = 'VENDA'; logDetails = `Mesa ${mesaNum} vendida para ${nome}.`; }
         else if (mesaAntes.status === 'livre' && status === 'reservada') { logAction = 'RESERVA'; logDetails = `Mesa ${mesaNum} reservada para ${nome}.`; }
         else if (mesaAntes.status === 'reservada' && status === 'vendida') { logAction = 'VENDA (de reserva)'; logDetails = `Reserva da Mesa ${mesaNum} (cliente ${nome}) foi efetivada como venda.`; }
         await logActivity(logAction, logDetails);
-        
         await unlockTable(mesaNum);
         elements.cadastroForm.style.display = 'none';
     });
