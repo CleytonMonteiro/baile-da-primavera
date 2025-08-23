@@ -61,6 +61,10 @@ document.addEventListener('DOMContentLoaded', () => {
         statusMesaSelect: document.getElementById('status-mesa'),
         searchInput: document.getElementById('search-input'),
         filterButtons: document.getElementById('filter-buttons'),
+        exportContainer: document.getElementById('export-container'),
+        exportCsvBtn: document.getElementById('export-csv-btn'),
+        exportPdfBtn: document.getElementById('export-pdf-btn'),
+        exportFilter: document.getElementById('export-filter')
     };
 
     function renderInitialLayout() {
@@ -188,6 +192,32 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.infoPanel.classList.add('visible');
     }
 
+    function getExportData() {
+        const filterValue = elements.exportFilter.value;
+        const allTablesData = [];
+
+        for (const colId in layoutMesasGlobal) {
+            (layoutMesasGlobal[colId] || []).forEach(numeroMesa => {
+                const data = mesasDataGlobal[numeroMesa] || { status: 'livre' };
+                allTablesData.push({
+                    numero: parseInt(numeroMesa),
+                    nome: data.nome || '---',
+                    contato: data.contato || '---',
+                    status: data.status || 'livre'
+                });
+            });
+        }
+        
+        const filteredData = allTablesData.filter(table => {
+            if (filterValue === 'ocupadas') {
+                return table.status === 'reservada' || table.status === 'vendida';
+            }
+            return table.status === filterValue;
+        });
+
+        return filteredData.sort((a, b) => a.numero - b.numero);
+    }
+
     elements.layoutContainer.addEventListener('click', (e) => {
         const mesaClicada = e.target.closest('.mesa');
         if (!mesaClicada) return;
@@ -266,11 +296,13 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.logoutBtn.style.display = 'inline-block';
             elements.loginLinkBtn.style.display = 'none';
             elements.statArrecadado.style.display = 'inline-block';
+            elements.exportContainer.style.display = 'flex';
         } else {
             elements.statusText.textContent = 'Clique em uma mesa para ver os detalhes.';
             elements.logoutBtn.style.display = 'none';
             elements.loginLinkBtn.style.display = 'inline-block';
             elements.statArrecadado.style.display = 'none';
+            elements.exportContainer.style.display = 'none';
         }
     });
 
@@ -284,13 +316,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     onValue(layoutRef, (snapshot) => {
         layoutMesasGlobal = snapshot.val() || {};
-        // Se o layout mudar, força a recriação da estrutura
         renderInitialLayout();
     });
 
     onValue(mesasRef, (snapshot) => {
         mesasDataGlobal = snapshot.val() || {};
-        // Se só os dados das mesas mudarem, apenas atualiza a visão
         if (isInitialLayoutRendered) {
             updateMesasView();
         }
@@ -317,13 +347,42 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('cancelar-login-btn').addEventListener('click', () => { elements.loginForm.style.display = 'none'; });
 
-    // --- CORREÇÃO DE CACHE ADICIONADA AQUI ---
-    // Este evento força uma nova renderização sempre que a página se torna visível
+    elements.exportCsvBtn.addEventListener('click', () => {
+        const data = getExportData();
+        if (data.length === 0) { alert("Nenhuma mesa encontrada para exportar com este filtro."); return; }
+        let csvContent = "Numero da Mesa,Nome Completo,Contato,Status\n";
+        data.forEach(item => {
+            const nome = `"${item.nome}"`;
+            const contato = `"${item.contato}"`;
+            csvContent += `${item.numero},${nome},${contato},${item.status}\n`;
+        });
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `relatorio_mesas_${elements.exportFilter.value}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+
+    elements.exportPdfBtn.addEventListener('click', () => {
+        const data = getExportData();
+        if (data.length === 0) { alert("Nenhuma mesa encontrada para exportar com este filtro."); return; }
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const tableColumn = ["Nº da Mesa", "Nome Completo", "Contato", "Status"];
+        const tableRows = data.map(item => [item.numero, item.nome, item.contato, item.status]);
+        const filterText = elements.exportFilter.options[elements.exportFilter.selectedIndex].text;
+        doc.text(`Relatório de Mesas: ${filterText}`, 14, 15);
+        doc.autoTable(tableColumn, tableRows, { startY: 20 });
+        doc.save(`relatorio_mesas_${elements.exportFilter.value}.pdf`);
+    });
+
     window.addEventListener('pageshow', (event) => {
-        // A propriedade 'persisted' é verdadeira se a página foi carregada do cache
         if (event.persisted) {
-            console.log("Página carregada do cache. Forçando nova renderização.");
-            isInitialLayoutRendered = false; // Força a recriação do layout
+            isInitialLayoutRendered = false;
             renderInitialLayout(); 
         }
     });
