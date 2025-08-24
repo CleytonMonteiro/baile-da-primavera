@@ -33,12 +33,7 @@ let hasPerformedInitialCleanup = false;
 
 async function logActivity(action, details) {
     if (!currentUser) return;
-    await push(activityLogRef, {
-        action,
-        details,
-        userEmail: currentUser.email,
-        timestamp: Date.now()
-    });
+    await push(activityLogRef, { action, details, userEmail: currentUser.email, timestamp: Date.now() });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -71,19 +66,13 @@ document.addEventListener('DOMContentLoaded', () => {
         contatoMesaInput: document.getElementById('contato-mesa')
     };
 
-    elements.nomeCompletoInput.addEventListener('input', () => {
-        elements.nomeCompletoInput.value = elements.nomeCompletoInput.value.toUpperCase();
-    });
-
-    IMask(elements.contatoMesaInput, {
-        mask: '(00) 00000-0000'
-    });
+    elements.nomeCompletoInput.addEventListener('input', () => { elements.nomeCompletoInput.value = elements.nomeCompletoInput.value.toUpperCase(); });
+    IMask(elements.contatoMesaInput, { mask: '(00) 00000-0000' });
 
     function renderInitialLayout() {
         if (!layoutMesasGlobal) return;
         const secoes = { esq: document.getElementById('col-esq'), cen: document.getElementById('col-cen'), dir: document.getElementById('col-dir') };
         Object.values(secoes).forEach(sec => { if (sec) sec.innerHTML = ''; });
-
         for (const colId in layoutMesasGlobal) {
             let secaoAlvo = null;
             if (colId.startsWith('col-esq')) secaoAlvo = secoes.esq;
@@ -109,17 +98,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateMesasView() {
         if (!isInitialLayoutRendered || !mesasDataGlobal) return;
-        
         let searchTerm = elements.searchInput.value.toLowerCase();
         let filterStatus = elements.filterButtons.querySelector('.filter-btn.active').dataset.status;
-
         document.querySelectorAll('.mesa').forEach(mesaDiv => {
             const mesaNum = mesaDiv.dataset.numero;
             const mesaData = mesasDataGlobal[mesaNum] || { status: 'livre' };
-            
             mesaDiv.classList.remove('livre', 'reservada', 'vendida', 'bloqueada');
             mesaDiv.classList.add(mesaData.status);
-            
             const lockInfo = mesaData.lockInfo;
             if (lockInfo && (Date.now() - lockInfo.timestamp < LOCK_TIMEOUT_MS)) {
                 mesaDiv.classList.add('bloqueada');
@@ -127,7 +112,6 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 mesaDiv.title = '';
             }
-            
             const statusMatch = filterStatus === 'all' || mesaData.status === filterStatus;
             const searchMatch = !searchTerm || mesaNum.toString().includes(searchTerm) || (mesaData.nome && mesaData.nome.toLowerCase().includes(searchTerm));
             mesaDiv.style.display = (statusMatch && searchMatch) ? 'flex' : 'none';
@@ -157,11 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function lockTable(mesaNum) {
         if (!currentUser) return;
-        await update(ref(database, `mesas/${mesaNum}/lockInfo`), {
-            userId: currentUser.uid,
-            userEmail: currentUser.email,
-            timestamp: Date.now()
-        });
+        await update(ref(database, `mesas/${mesaNum}/lockInfo`), { userId: currentUser.uid, userEmail: currentUser.email, timestamp: Date.now() });
     }
 
     async function unlockTable(mesaNum) {
@@ -169,11 +149,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     async function abrirModalCadastro(mesaNum) {
-        if (activeModalTable && activeModalTable !== mesaNum) {
-            await unlockTable(activeModalTable);
-        }
+        if (activeModalTable && activeModalTable !== mesaNum) { await unlockTable(activeModalTable); }
         activeModalTable = mesaNum;
-
         await lockTable(mesaNum);
         const mesaData = mesasDataGlobal[mesaNum] || { status: 'livre' };
         document.getElementById('modal-numero-mesa').textContent = String(mesaNum).padStart(2, '0');
@@ -191,7 +168,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function showInfoPanel(mesaNum) {
         const defaults = { status: 'livre', nome: '---', preco: 0, contato: '', email: '', pago: false };
         const mesaData = { ...defaults, ...mesasDataGlobal[mesaNum] };
-
         elements.infoPanel.dataset.currentTable = mesaNum;
         document.getElementById('info-panel-numero').textContent = String(mesaNum).padStart(2, '0');
         document.getElementById('info-panel-status').textContent = mesaData.status.charAt(0).toUpperCase() + mesaData.status.slice(1);
@@ -211,23 +187,16 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.infoPanel.classList.add('visible');
     }
 
-    function getExportData() { /* ... (código da função sem alterações) ... */ }
-
     elements.layoutContainer.addEventListener('click', async (e) => {
         const mesaClicada = e.target.closest('.mesa');
         if (!mesaClicada) return;
-
         const mesaNum = mesaClicada.dataset.numero;
         const mesaData = mesasDataGlobal[mesaNum] || { status: 'livre' };
         const lockInfo = mesaData.lockInfo;
-
         if (lockInfo) {
             const isLockExpired = Date.now() - lockInfo.timestamp > LOCK_TIMEOUT_MS;
-            
             if (isLockExpired) {
-                console.log(`Bloqueio da mesa ${mesaNum} expirou. Limpando...`);
                 await unlockTable(mesaNum);
-                // Após limpar, a mesa está livre para ser editada, então o código continua
             } else {
                 const isLockedByCurrentUser = currentUser && lockInfo.userId === currentUser.uid;
                 if (!isLockedByCurrentUser) {
@@ -236,7 +205,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
-        
         if (mesaData.status === 'livre') {
             if (isSupervisorLoggedIn) abrirModalCadastro(mesaNum);
             else elements.loginForm.style.display = 'flex';
@@ -247,7 +215,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('salvar-btn').addEventListener('click', async () => {
         const mesaNum = elements.mesaNumeroInput.value;
-        // ... (lógica de salvar, log e unlock sem alterações)
+        const nome = elements.nomeCompletoInput.value.trim();
+        const status = elements.statusMesaSelect.value;
+        const mesaAntes = mesasDataGlobal[mesaNum] || { status: 'livre' };
+        const mesaDataParaSalvar = { nome, status, preco: parseFloat(document.getElementById('preco-mesa').value) || 0, contato: elements.contatoMesaInput.value, email: document.getElementById('email-mesa').value.trim(), pago: (status === 'vendida') ? document.getElementById('pagamento-confirmado').checked : false };
+        await update(ref(database, 'mesas/' + mesaNum), mesaDataParaSalvar);
+        let logAction = 'EDIÇÃO', logDetails = `Dados da Mesa ${mesaNum} (cliente ${nome}) foram atualizados.`;
+        if (mesaAntes.status === 'livre' && status === 'vendida') { logAction = 'VENDA'; logDetails = `Mesa ${mesaNum} vendida para ${nome}.`; }
+        else if (mesaAntes.status === 'livre' && status === 'reservada') { logAction = 'RESERVA'; logDetails = `Mesa ${mesaNum} reservada para ${nome}.`; }
+        else if (mesaAntes.status === 'reservada' && status === 'vendida') { logAction = 'VENDA (de reserva)'; logDetails = `Reserva da Mesa ${mesaNum} (cliente ${nome}) foi efetivada como venda.`; }
+        await logActivity(logAction, logDetails);
         await unlockTable(mesaNum);
         activeModalTable = null;
         elements.cadastroForm.style.display = 'none';
@@ -255,7 +232,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('liberar-btn').addEventListener('click', async () => {
         const mesaNum = elements.mesaNumeroInput.value;
-        // ... (lógica de liberar e log sem alterações)
+        const nomeAntigo = mesasDataGlobal[mesaNum]?.nome || 'desconhecido';
+        await set(ref(database, 'mesas/' + mesaNum), { nome: '', status: 'livre', contato: '', email: '', pago: false, lockInfo: null });
+        await logActivity('LIBERAÇÃO', `Mesa ${mesaNum} (cliente ${nomeAntigo}) foi liberada.`);
         activeModalTable = null;
         elements.cadastroForm.style.display = 'none';
     });
@@ -269,16 +248,19 @@ document.addEventListener('DOMContentLoaded', () => {
     
     elements.searchInput.addEventListener('input', updateMesasView);
     elements.filterButtons.addEventListener('click', (e) => {
-        // ... (lógica de filtro sem alterações)
+        const target = e.target.closest('.filter-btn');
+        if (target) {
+            elements.filterButtons.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            target.classList.add('active');
+            updateMesasView();
+        }
     });
 
     function cleanupExpiredLocks() {
         if (!isSupervisorLoggedIn || !mesasDataGlobal) return;
-
         const agora = Date.now();
         const updates = {};
         let locksLimpados = 0;
-
         for (const mesaId in mesasDataGlobal) {
             const mesa = mesasDataGlobal[mesaId];
             if (mesa.lockInfo && (agora - mesa.lockInfo.timestamp > LOCK_TIMEOUT_MS)) {
@@ -286,7 +268,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 locksLimpados++;
             }
         }
-
         if (locksLimpados > 0) {
             console.log(`Zelador: Limpando ${locksLimpados} bloqueios expirados...`);
             update(ref(database), updates);
@@ -302,8 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.loginLinkBtn.style.display = 'none';
             elements.statArrecadado.style.display = 'inline-block';
             elements.exportContainer.style.display = 'flex';
-            // Limpeza proativa no momento do login
-            if (!hasPerformedInitialCleanup) {
+            if (!hasPerformedInitialCleanup && mesasDataGlobal) {
                 cleanupExpiredLocks();
                 hasPerformedInitialCleanup = true;
             }
@@ -335,16 +315,49 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isInitialLayoutRendered) {
             updateMesasView();
         }
-        // Garante que a limpeza inicial ocorra assim que os dados das mesas estiverem disponíveis
         if (isSupervisorLoggedIn && !hasPerformedInitialCleanup) {
             cleanupExpiredLocks();
             hasPerformedInitialCleanup = true;
         }
     });
     
-    // ... (restante dos listeners menores, exportação, etc., sem alterações)
-
-    setInterval(() => {
-        cleanupExpiredLocks();
-    }, 60000); // Roda a cada 60 segundos
+    document.getElementById('info-panel-close-btn').addEventListener('click', () => { elements.infoPanel.classList.remove('visible'); });
+    document.getElementById('manage-table-btn').addEventListener('click', () => { const mesaNum = elements.infoPanel.dataset.currentTable; if(mesaNum){ elements.infoPanel.classList.remove('visible'); abrirModalCadastro(mesaNum); } });
+    elements.loginLinkBtn.addEventListener('click', () => { elements.loginForm.style.display = 'flex'; });
+    elements.logoutBtn.addEventListener('click', () => signOut(auth));
+    document.getElementById('login-btn').addEventListener('click', () => {
+        const email = document.getElementById('login-email').value;
+        const pass = document.getElementById('login-senha').value;
+        signInWithEmailAndPassword(auth, email, pass).then(() => { elements.loginForm.style.display = 'none'; }).catch(() => { document.getElementById('login-erro').style.display = 'block'; });
+    });
+    document.getElementById('cancelar-login-btn').addEventListener('click', () => { elements.loginForm.style.display = 'none'; });
+    elements.exportCsvBtn.addEventListener('click', () => {
+        const data = getExportData();
+        if (data.length === 0) { alert("Nenhuma mesa encontrada para exportar com este filtro."); return; }
+        let csvContent = "Numero da Mesa,Nome Completo,Contato,Status\n";
+        data.forEach(item => { csvContent += `${item.numero},"${item.nome}","${item.contato}","${item.status}"\n`; });
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `relatorio_mesas_${elements.exportFilter.value}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+    elements.exportPdfBtn.addEventListener('click', () => {
+        const data = getExportData();
+        if (data.length === 0) { alert("Nenhuma mesa encontrada para exportar com este filtro."); return; }
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const tableColumn = ["Nº da Mesa", "Nome Completo", "Contato", "Status"];
+        const tableRows = data.map(item => [item.numero, item.nome, item.contato, item.status]);
+        const filterText = elements.exportFilter.options[elements.exportFilter.selectedIndex].text;
+        doc.text(`Relatório de Mesas: ${filterText}`, 14, 15);
+        doc.autoTable(tableColumn, tableRows, { startY: 20 });
+        doc.save(`relatorio_mesas_${elements.exportFilter.value}.pdf`);
+    });
+    window.addEventListener('pageshow', (event) => { if (event.persisted) { isInitialLayoutRendered = false; renderInitialLayout(); } });
+    setInterval(() => { cleanupExpiredLocks(); }, 60000);
 });
