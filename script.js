@@ -83,7 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!layoutMesasGlobal) return;
         const secoes = { esq: document.getElementById('col-esq'), cen: document.getElementById('col-cen'), dir: document.getElementById('col-dir') };
         Object.values(secoes).forEach(sec => { if (sec) sec.innerHTML = ''; });
-
         for (const colId in layoutMesasGlobal) {
             let secaoAlvo = null;
             if (colId.startsWith('col-esq')) secaoAlvo = secoes.esq;
@@ -109,17 +108,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateMesasView() {
         if (!isInitialLayoutRendered || !mesasDataGlobal) return;
-        
         let searchTerm = elements.searchInput.value.toLowerCase();
         let filterStatus = elements.filterButtons.querySelector('.filter-btn.active').dataset.status;
-
         document.querySelectorAll('.mesa').forEach(mesaDiv => {
             const mesaNum = mesaDiv.dataset.numero;
             const mesaData = mesasDataGlobal[mesaNum] || { status: 'livre' };
-            
             mesaDiv.classList.remove('livre', 'reservada', 'vendida', 'bloqueada');
             mesaDiv.classList.add(mesaData.status);
-            
             const lockInfo = mesaData.lockInfo;
             if (lockInfo && (Date.now() - lockInfo.timestamp < LOCK_TIMEOUT_MS)) {
                 mesaDiv.classList.add('bloqueada');
@@ -127,7 +122,6 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 mesaDiv.title = '';
             }
-            
             const statusMatch = filterStatus === 'all' || mesaData.status === filterStatus;
             const searchMatch = !searchTerm || mesaNum.toString().includes(searchTerm) || (mesaData.nome && mesaData.nome.toLowerCase().includes(searchTerm));
             mesaDiv.style.display = (statusMatch && searchMatch) ? 'flex' : 'none';
@@ -177,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.contatoMesaInput.value = mesaData.contato || '';
         document.getElementById('email-mesa').value = mesaData.email || '';
         document.getElementById('pagamento-confirmado').checked = mesaData.pago || false;
-        document.getElementById('pagamento-container').style.display = (mesaData.status === 'vendida' || elements.statusMesaSelect.value === 'vendida') ? 'flex' : 'none';
+        document.getElementById('pagamento-container').style.display = (elements.statusMesaSelect.value === 'vendida') ? 'flex' : 'none';
         elements.cadastroForm.style.display = 'flex';
     }
 
@@ -278,6 +272,10 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.cadastroForm.style.display = 'none';
     });
     
+    elements.statusMesaSelect.addEventListener('change', () => {
+        document.getElementById('pagamento-container').style.display = (elements.statusMesaSelect.value === 'vendida') ? 'flex' : 'none';
+    });
+
     elements.searchInput.addEventListener('input', updateMesasView);
     elements.filterButtons.addEventListener('click', (e) => {
         const target = e.target.closest('.filter-btn');
@@ -363,7 +361,6 @@ document.addEventListener('DOMContentLoaded', () => {
         signInWithEmailAndPassword(auth, email, pass).then(() => { elements.loginForm.style.display = 'none'; }).catch(() => { document.getElementById('login-erro').style.display = 'block'; });
     });
     document.getElementById('cancelar-login-btn').addEventListener('click', () => { elements.loginForm.style.display = 'none'; });
-    
     elements.exportCsvBtn.addEventListener('click', () => {
         const data = getExportData();
         if (data.length === 0) { alert("Nenhuma mesa encontrada para exportar com este filtro."); return; }
@@ -391,9 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
         doc.autoTable(tableColumn, tableRows, { startY: 20 });
         doc.save(`relatorio_mesas_${elements.exportFilter.value}.pdf`);
     });
-    
     window.addEventListener('pageshow', (event) => { if (event.persisted) { isInitialLayoutRendered = false; renderInitialLayout(); } });
-    
     setInterval(() => {
         cleanupExpiredLocks();
     }, 60000);
