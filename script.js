@@ -281,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (mesaDataParaSalvar.status === 'vendida' && mesaDataParaSalvar.email && 
             (mesaAntes.status !== 'vendida' || mesaAntes.email !== mesaDataParaSalvar.email)) {
             try {
-                const response = await fetch('https://polite-stardust-915878.netlify.app/.netlify/functions/enviar-email', {
+                const response = await fetch('https://salaodefestas.netlify.app/.netlify/functions/enviar-email', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -347,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const response = await fetch('https://polite-stardust-915878.netlify.app/.netlify/functions/enviar-email', {
+            const response = await fetch('https://salaodefestas.netlify.app/.netlify/functions/enviar-email', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
