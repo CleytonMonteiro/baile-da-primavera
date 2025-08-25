@@ -17,14 +17,24 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
-
-  const { numero, nome, email } = JSON.parse(req.body);
-
-  if (!numero || !nome || !email) {
-    return res.status(400).json({ message: 'Dados incompletos.' });
-  }
-
+  
+  // Use um bloco try-catch para capturar qualquer falha durante a execução
   try {
+    let body;
+    try {
+      // Tenta parsear o corpo da requisição. Se falhar, o corpo está vazio ou mal-formado.
+      body = JSON.parse(req.body);
+    } catch (e) {
+      console.error('Falha ao parsear JSON:', e);
+      return res.status(400).json({ message: 'Corpo da requisição inválido.' });
+    }
+
+    const { numero, nome, email } = body;
+
+    if (!numero || !nome || !email) {
+      return res.status(400).json({ message: 'Dados incompletos.' });
+    }
+
     const qrData = JSON.stringify({
       mesa: numero,
       nome: nome,
@@ -60,7 +70,7 @@ export default async function handler(req, res) {
 
     res.status(200).json({ message: 'E-mail enviado com sucesso!', emailData: data });
   } catch (error) {
-    console.error(error);
+    console.error('Erro fatal na função:', error);
     res.status(500).json({ message: 'Falha interna do servidor.', details: error.message });
   }
 }
