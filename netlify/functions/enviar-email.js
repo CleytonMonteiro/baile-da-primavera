@@ -44,7 +44,7 @@ export default async function handler(req, res) {
     const qrCodeDataURL = await QRCode.toDataURL(qrData);
 
     const { data, error } = await resend.emails.send({
-      from: 'Seu E-mail Verificado <onboarding@resend.dev>',
+      from: 'SECRETARIA@AABB-ARACAJU.COM.BR',
       to: [email],
       subject: `Confirmação de Venda - Mesa ${String(numero).padStart(2, '0')}`,
       html: `
