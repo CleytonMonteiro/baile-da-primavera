@@ -1,15 +1,24 @@
 import QRCode from 'qrcode';
 import { Resend } from 'resend';
 
-// Certifique-se de configurar sua chave de API do Resend como uma variável de ambiente no Netlify.
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export default async function handler(req, res) {
+  // Adiciona o cabeçalho CORS para permitir requisições de qualquer origem
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // Lida com a requisição de pré-verificação (preflight request)
+  if (req.method === 'OPTIONS') {
+    return res.status(200).send();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  const { numero, nome, email } = req.body;
+  const { numero, nome, email } = JSON.parse(req.body);
 
   if (!numero || !nome || !email) {
     return res.status(400).json({ message: 'Dados incompletos.' });
@@ -20,7 +29,7 @@ export default async function handler(req, res) {
       mesa: numero,
       nome: nome,
       evento: "AABB ARACAJU",
-      data: "2025-06-26" // Exemplo, pode ser dinâmico
+      data: "2025-06-26"
     });
     const qrCodeDataURL = await QRCode.toDataURL(qrData);
 
