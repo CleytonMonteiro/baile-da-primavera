@@ -44,7 +44,8 @@ exports.handler = async (event) => {
       evento: "AABB ARACAJU",
       data: "2025-06-26"
     });
-    const qrCodeDataURL = await QRCode.toDataURL(qrData);
+    // Gera o QR Code como um buffer, que pode ser anexado a um e-mail
+    const qrCodeBuffer = await QRCode.toBuffer(qrData, { type: 'png' });
 
     const { data, error } = await resend.emails.send({
       from: 'Seu E-mail Verificado <onboarding@resend.dev>',
@@ -55,15 +56,16 @@ exports.handler = async (event) => {
           <h2 style="color: #007bff;">Confirmação de Compra - AABB ARACAJU</h2>
           <p>Olá, <strong>${nome}</strong>,</p>
           <p>Obrigado por sua compra! A sua reserva da <strong>Mesa ${String(numero).padStart(2, '0')}</strong> foi confirmada.</p>
-          <p>Apresente o QR Code abaixo na entrada do evento para validação.</p>
-          <div style="text-align: center; margin-top: 20px; padding: 10px; border: 1px dashed #ccc;">
-            <img src="${qrCodeDataURL}" alt="QR Code da Mesa ${numero}" style="width: 200px; height: 200px;" />
-            <p style="font-size: 0.8em; color: #666;">Número da Mesa: ${String(numero).padStart(2, '0')}</p>
-          </div>
+          <p>O QR Code de acesso foi enviado como anexo. Por favor, baixe o arquivo para apresentação na entrada do evento.</p>
           <p style="margin-top: 30px;">Atenciosamente,</p>
           <p><strong>AABB ARACAJU</strong></p>
         </div>
       `,
+      // Adiciona o QR Code como um anexo de arquivo
+      attachments: [{
+        filename: `qrcode-mesa-${numero}.png`,
+        content: qrCodeBuffer,
+      }],
     });
 
     if (error) {
