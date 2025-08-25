@@ -1,32 +1,41 @@
-import QRCode from 'qrcode';
-import { Resend } from 'resend';
+const QRCode = require('qrcode');
+const { Resend } = require('resend');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export default async function handler(req, res) {
-  // Lida com a requisição de pré-verificação (preflight request)
-  if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Origin', 'https://cleytonmonteiro.github.io');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    return res.status(200).send();
+exports.handler = async (event) => {
+  const headers = {
+    'Access-Control-Allow-Origin': 'https://cleytonmonteiro.github.io',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Content-Type': 'application/json'
+  };
+
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers,
+      body: ''
+    };
   }
 
-  // Define os cabeçalhos CORS para a requisição POST
-  res.setHeader('Access-Control-Allow-Origin', 'https://cleytonmonteiro.github.io');
-  res.setHeader('Access-Control-Allow-Methods', 'POST');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method Not Allowed' });
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      headers,
+      body: JSON.stringify({ message: 'Method Not Allowed' })
+    };
   }
 
-  // Use um bloco try-catch para capturar qualquer falha durante a execução
   try {
-    const { numero, nome, email } = JSON.parse(req.body);
+    const body = JSON.parse(event.body);
+    const { numero, nome, email } = body;
 
     if (!numero || !nome || !email) {
-      return res.status(400).json({ message: 'Dados incompletos.' });
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ message: 'Dados incompletos.' })
+      };
     }
 
     const qrData = JSON.stringify({
@@ -59,12 +68,25 @@ export default async function handler(req, res) {
 
     if (error) {
       console.error({ error });
-      return res.status(500).json({ message: 'Erro ao enviar e-mail.', details: error.message });
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ message: 'Erro ao enviar e-mail.', details: error.message })
+      };
     }
 
-    res.status(200).json({ message: 'E-mail enviado com sucesso!', emailData: data });
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({ message: 'E-mail enviado com sucesso!', emailData: data })
+    };
+
   } catch (error) {
     console.error('Erro fatal na função:', error);
-    res.status(500).json({ message: 'Falha interna do servidor.', details: error.message });
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ message: 'Falha interna do servidor.', details: error.message })
+    };
   }
-}
+};
