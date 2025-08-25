@@ -68,7 +68,8 @@ document.addEventListener('DOMContentLoaded', () => {
         exportCsvBtn: document.getElementById('export-csv-btn'),
         exportPdfBtn: document.getElementById('export-pdf-btn'),
         exportFilter: document.getElementById('export-filter'),
-        contatoMesaInput: document.getElementById('contato-mesa')
+        contatoMesaInput: document.getElementById('contato-mesa'),
+        reenviarEmailBtn: document.getElementById('reenviar-email-btn')
     };
 
     elements.nomeCompletoInput.addEventListener('input', () => {
@@ -171,6 +172,14 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.contatoMesaInput.value = mesaData.contato || '';
         document.getElementById('email-mesa').value = mesaData.email || '';
         document.getElementById('pagamento-confirmado').checked = mesaData.pago || false;
+        
+        // Lógica para mostrar o botão de reenvio apenas se for uma mesa vendida com e-mail
+        if (mesaData.status === 'vendida' && mesaData.email && isSupervisorLoggedIn) {
+            elements.reenviarEmailBtn.style.display = 'block';
+        } else {
+            elements.reenviarEmailBtn.style.display = 'none';
+        }
+        
         document.getElementById('pagamento-container').style.display = (elements.statusMesaSelect.value === 'vendida') ? 'flex' : 'none';
         elements.cadastroForm.style.display = 'flex';
     }
@@ -243,8 +252,78 @@ document.addEventListener('DOMContentLoaded', () => {
         const mesaNum = elements.mesaNumeroInput.value;
         const nome = elements.nomeCompletoInput.value.trim();
         const status = elements.statusMesaSelect.value;
+        const email = document.getElementById('email-mesa').value.trim();
+        
+        // Validação básica do email para vendas
+        if (status === 'vendida' && !email) {
+            Toastify({
+                text: "O e-mail é obrigatório para mesas vendidas.",
+                duration: 3000,
+                close: true,
+                gravity: "bottom",
+                position: "right",
+                backgroundColor: "#dc3545",
+            }).showToast();
+            return;
+        }
+
         const mesaAntes = mesasDataGlobal[mesaNum] || { status: 'livre' };
-        const mesaDataParaSalvar = { nome, status, preco: parseFloat(document.getElementById('preco-mesa').value) || 0, contato: elements.contatoMesaInput.value, email: document.getElementById('email-mesa').value.trim(), pago: (status === 'vendida') ? document.getElementById('pagamento-confirmado').checked : false };
+        const mesaDataParaSalvar = { 
+            nome, 
+            status, 
+            preco: parseFloat(document.getElementById('preco-mesa').value) || 0, 
+            contato: elements.contatoMesaInput.value, 
+            email: email, 
+            pago: (status === 'vendida') ? document.getElementById('pagamento-confirmado').checked : false 
+        };
+        
+        // Chamada à função serverless se for uma nova venda ou se o email foi alterado em uma mesa já vendida
+        if (mesaDataParaSalvar.status === 'vendida' && mesaDataParaSalvar.email && 
+            (mesaAntes.status !== 'vendida' || mesaAntes.email !== mesaDataParaSalvar.email)) {
+            try {
+                const response = await fetch('https://polite-stardust-915878.netlify.app/.netlify/functions/enviar-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        numero: mesaNum,
+                        nome: mesaDataParaSalvar.nome,
+                        email: mesaDataParaSalvar.email
+                    }),
+                });
+
+                if (!response.ok) {
+                    console.error('Falha ao acionar o envio de e-mail.');
+                    Toastify({
+                        text: "Falha ao enviar e-mail. Verifique a configuração ou tente o reenvio manual.",
+                        duration: 5000,
+                        close: true,
+                        gravity: "bottom",
+                        position: "right",
+                        backgroundColor: "#dc3545",
+                    }).showToast();
+                } else {
+                    Toastify({
+                        text: "E-mail de confirmação acionado com sucesso!",
+                        duration: 3000,
+                        close: true,
+                        gravity: "bottom",
+                        position: "right",
+                        backgroundColor: "#28a745",
+                    }).showToast();
+                }
+            } catch (error) {
+                console.error('Erro de rede ao chamar a função serverless:', error);
+                Toastify({
+                    text: "Erro de rede. O e-mail não foi enviado.",
+                    duration: 3000,
+                    close: true,
+                    gravity: "bottom",
+                    position: "right",
+                    backgroundColor: "#dc3545",
+                }).showToast();
+            }
+        }
+        
         await update(ref(database, 'mesas/' + mesaNum), mesaDataParaSalvar);
         let logAction = 'EDIÇÃO', logDetails = `Dados da Mesa ${mesaNum} (cliente ${nome}) foram atualizados.`;
         if (mesaAntes.status === 'livre' && status === 'vendida') { logAction = 'VENDA'; logDetails = `Mesa ${mesaNum} vendida para ${nome}.`; }
@@ -254,6 +333,39 @@ document.addEventListener('DOMContentLoaded', () => {
         await unlockTable(mesaNum);
         activeModalTable = null;
         elements.cadastroForm.style.display = 'none';
+    });
+    
+    // NOVO EVENT LISTENER PARA O BOTÃO DE REENVIO
+    elements.reenviarEmailBtn.addEventListener('click', async () => {
+        const mesaNum = elements.mesaNumeroInput.value;
+        const nome = elements.nomeCompletoInput.value.trim();
+        const email = document.getElementById('email-mesa').value.trim();
+        
+        if (!email) {
+            Toastify({ text: "O campo de e-mail está vazio.", duration: 3000, backgroundColor: "#dc3545" }).showToast();
+            return;
+        }
+
+        try {
+            const response = await fetch('https://polite-stardust-915878.netlify.app/.netlify/functions/enviar-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    numero: mesaNum,
+                    nome: nome,
+                    email: email
+                }),
+            });
+
+            if (response.ok) {
+                Toastify({ text: "E-mail de confirmação reenviado com sucesso!", duration: 3000, backgroundColor: "#28a745" }).showToast();
+            } else {
+                Toastify({ text: "Falha ao reenviar o e-mail.", duration: 3000, backgroundColor: "#dc3545" }).showToast();
+            }
+        } catch (error) {
+            console.error('Erro de rede ao chamar a função serverless:', error);
+            Toastify({ text: "Erro de rede. Verifique sua conexão ou tente novamente.", duration: 3000, backgroundColor: "#dc3545" }).showToast();
+        }
     });
 
     document.getElementById('liberar-btn').addEventListener('click', async () => {
