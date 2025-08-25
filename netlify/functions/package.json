@@ -1,0 +1,10 @@
+{
+  "name": "enviar-email-function",
+  "version": "1.0.0",
+  "description": "Função para enviar e-mails de confirmação.",
+  "main": "enviar-email.js",
+  "dependencies": {
+    "qrcode": "^1.5.3",
+    "resend": "^3.2.0"
+  }
+}
