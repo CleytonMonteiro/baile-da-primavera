@@ -41,6 +41,12 @@ async function logActivity(action, details) {
     });
 }
 
+// NOVA FUNÇÃO DE VALIDAÇÃO DE EMAIL
+function isValidEmail(email) {
+    const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const loadingOverlay = document.getElementById('loading-overlay');
     const elements = {
@@ -173,7 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('email-mesa').value = mesaData.email || '';
         document.getElementById('pagamento-confirmado').checked = mesaData.pago || false;
         
-        // Lógica para mostrar o botão de reenvio apenas se for uma mesa vendida com e-mail
         if (mesaData.status === 'vendida' && mesaData.email && isSupervisorLoggedIn) {
             elements.reenviarEmailBtn.style.display = 'block';
         } else {
@@ -253,18 +258,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const nome = elements.nomeCompletoInput.value.trim();
         const status = elements.statusMesaSelect.value;
         const email = document.getElementById('email-mesa').value.trim();
-        
-        // Validação básica do email para vendas
-        if (status === 'vendida' && !email) {
-            Toastify({
-                text: "O e-mail é obrigatório para mesas vendidas.",
-                duration: 3000,
-                close: true,
-                gravity: "bottom",
-                position: "right",
-                backgroundColor: "#dc3545",
-            }).showToast();
-            return;
+
+        if (status === 'vendida') {
+            if (!email) {
+                Toastify({ text: "O e-mail é obrigatório para mesas vendidas.", duration: 3000, backgroundColor: "#dc3545" }).showToast();
+                return;
+            }
+            if (!isValidEmail(email)) {
+                Toastify({ text: "O e-mail inserido é inválido.", duration: 3000, backgroundColor: "#dc3545" }).showToast();
+                return;
+            }
         }
 
         const mesaAntes = mesasDataGlobal[mesaNum] || { status: 'livre' };
@@ -277,7 +280,6 @@ document.addEventListener('DOMContentLoaded', () => {
             pago: (status === 'vendida') ? document.getElementById('pagamento-confirmado').checked : false 
         };
         
-        // Chamada à função serverless se for uma nova venda ou se o email foi alterado em uma mesa já vendida
         if (mesaDataParaSalvar.status === 'vendida' && mesaDataParaSalvar.email && 
             (mesaAntes.status !== 'vendida' || mesaAntes.email !== mesaDataParaSalvar.email)) {
             try {
@@ -335,7 +337,6 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.cadastroForm.style.display = 'none';
     });
     
-    // NOVO EVENT LISTENER PARA O BOTÃO DE REENVIO
     elements.reenviarEmailBtn.addEventListener('click', async () => {
         const mesaNum = elements.mesaNumeroInput.value;
         const nome = elements.nomeCompletoInput.value.trim();
@@ -343,6 +344,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (!email) {
             Toastify({ text: "O campo de e-mail está vazio.", duration: 3000, backgroundColor: "#dc3545" }).showToast();
+            return;
+        }
+
+        if (!isValidEmail(email)) {
+            Toastify({ text: "O e-mail inserido é inválido.", duration: 3000, backgroundColor: "#dc3545" }).showToast();
             return;
         }
 
@@ -384,7 +390,6 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.cadastroForm.style.display = 'none';
     });
     
-    // --- LÓGICA DO CHECKBOX DE PAGAMENTO RESTAURADA ---
     elements.statusMesaSelect.addEventListener('change', () => {
         const pagamentoContainer = document.getElementById('pagamento-container');
         if (elements.statusMesaSelect.value === 'vendida') {
