@@ -42,7 +42,7 @@ exports.handler = async (event) => {
       mesa: numero,
       nome: nome,
       evento: "AABB ARACAJU",
-      data: "2025-06-26"
+      data: "2025-08-12"
     });
     // Gera o QR Code como um buffer, que pode ser anexado a um e-mail
     const qrCodeBuffer = await QRCode.toBuffer(qrData, { type: 'png' });
