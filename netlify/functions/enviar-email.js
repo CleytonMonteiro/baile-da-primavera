@@ -48,7 +48,7 @@ exports.handler = async (event) => {
     const qrCodeBuffer = await QRCode.toBuffer(qrData, { type: 'png' });
 
     const { data, error } = await resend.emails.send({
-      from: 'AABB ARACAJU <aabb-aracaju.com.br>',
+      from: 'AABB Aracaju <contato@aabb-aracaju.com.br>',
       to: [email],
       subject: `Confirmação de Compra - Mesa ${String(numero).padStart(2, '0')}`,
       html: `
