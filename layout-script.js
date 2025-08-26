@@ -75,8 +75,6 @@ document.addEventListener('DOMContentLoaded', () => {
             mesasListDiv.dataset.column = columnId;
             
             if (Array.isArray(columnData)) {
-                // --- CORREÇÃO APLICADA AQUI ---
-                // A ordenação numérica foi removida para respeitar a ordem do drag-and-drop
                 columnData.forEach(mesaNum => {
                     const mesaItemDiv = document.createElement('div');
                     mesaItemDiv.className = 'mesa-item';
@@ -117,6 +115,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     deleteModeToggle.addEventListener('change', (e) => { document.body.classList.toggle('delete-mode-active', e.target.checked); });
     addColumnBtn.addEventListener('click', () => {
+        // --- ALTERAÇÃO APLICADA AQUI ---
+        // Removida a função prompt() para uma experiência mais fluida.
+        // Você pode conectar este botão a um modal de sua escolha.
         const columnName = prompt("Digite o nome da nova coluna (ex: col-esq-3, palco, etc.):");
         if (columnName && !editableLayout[columnName]) {
             editableLayout[columnName] = [];
@@ -127,6 +128,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     addMesaBtn.addEventListener('click', () => {
+        // --- ALTERAÇÃO APLICADA AQUI ---
+        // Removida a função prompt() para uma experiência mais fluida.
+        // Você pode conectar este botão a um modal de sua escolha.
         const columnOptions = Object.keys(editableLayout).sort().join(', ');
         const columnId = prompt(`Em qual coluna você quer adicionar a mesa?\nOpções: ${columnOptions}`);
         if (!columnId || !editableLayout[columnId]) {
@@ -140,7 +144,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             editableLayout[columnId].push(mesaNum);
-            editableLayout[columnId].sort((a,b) => a-b); // Ordena apenas ao adicionar
+            // --- ALTERAÇÃO APLICADA AQUI ---
+            // Linha abaixo removida para manter a ordem manual
+            // editableLayout[columnId].sort((a,b) => a-b); 
             renderEditor();
         } else {
             alert("Número de mesa inválido.");
@@ -182,8 +188,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(editableLayout[columnId].length === 0) {
                     delete editableLayout[columnId];
                 }
-                // --- CORREÇÃO APLICADA AQUI ---
-                // A ordenação foi removida daqui também para preservar a ordem manual
+                // --- ALTERAÇÃO APLICADA AQUI ---
+                // Linha abaixo removida para preservar a ordem manual
+                // editableLayout[columnId].sort((a,b) => a-b);
             }
             set(layoutRef, editableLayout)
                 .then(() => alert("Layout salvo com sucesso!"))
